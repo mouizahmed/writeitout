@@ -36,6 +36,11 @@ export default function Navbar() {
               <a href="#faq" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
                 FAQ
               </a>
+
+              {/* Pricing */}
+              <a href="#pricing" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
+                Pricing
+              </a>
             </div>
 
             {/* Mobile & Desktop Right side */}
