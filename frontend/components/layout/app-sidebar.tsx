@@ -51,15 +51,15 @@ function SidebarHeaderContent() {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible='icon' variant='floating' {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="bg-amber-50/50">
         <SidebarHeaderContent />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="bg-amber-50/50">
         {sidebarData.navGroups.map((props) => (
           <NavGroup key={props.title} {...props} />
         ))}
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="bg-amber-50/50">
         <NavUser user={sidebarData.user} />
       </SidebarFooter>
       <SidebarRail />
