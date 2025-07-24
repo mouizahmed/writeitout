@@ -4,7 +4,7 @@ import { Globe, Captions, Mic, ArrowUpDown } from "lucide-react";
 
 export default function Features() {
   return (
-    <section id="features" className="px-6 py-12 bg-gradient-to-b from-pink-50 via-orange-50 to-yellow-50">
+    <section id="features" className="px-6 py-12 bg-gradient-to-b from-amber-50/40 via-yellow-50/20 to-amber-50/30">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
           Everything you need for audio processing

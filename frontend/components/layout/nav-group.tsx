@@ -69,7 +69,7 @@ const SidebarMenuLink = ({ item, pathname }: { item: NavLink; pathname: string }
         asChild
         isActive={checkIsActive(pathname, item)}
         tooltip={item.title}
-        className="hover:bg-amber-100/50 data-[active=true]:bg-amber-200/50"
+        className="hover:bg-amber-100/30 data-[active=true]:bg-amber-200/30"
       >
         <Link href={item.url} onClick={() => setOpenMobile(false)}>
           {item.icon && <item.icon />}
@@ -97,7 +97,7 @@ const SidebarMenuCollapsible = ({
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip={item.title} className="hover:bg-amber-100/50">
+          <SidebarMenuButton tooltip={item.title} className="hover:bg-amber-100/30">
             {item.icon && <item.icon />}
             <span>{item.title}</span>
             {item.badge && <NavBadge>{item.badge}</NavBadge>}
@@ -111,7 +111,7 @@ const SidebarMenuCollapsible = ({
                 <SidebarMenuSubButton
                   asChild
                   isActive={checkIsActive(pathname, subItem)}
-                  className="hover:bg-amber-100/50 data-[active=true]:bg-amber-200/50"
+                  className="hover:bg-amber-100/30 data-[active=true]:bg-amber-200/30"
                 >
                   <Link href={subItem.url} onClick={() => setOpenMobile(false)}>
                     {subItem.icon && <subItem.icon />}
@@ -142,7 +142,7 @@ const SidebarMenuCollapsedDropdown = ({
           <SidebarMenuButton
             tooltip={item.title}
             isActive={checkIsActive(pathname, item)}
-            className="hover:bg-amber-100/50 data-[active=true]:bg-amber-200/50"
+            className="hover:bg-amber-100/30 data-[active=true]:bg-amber-200/30"
           >
             {item.icon && <item.icon />}
             <span>{item.title}</span>

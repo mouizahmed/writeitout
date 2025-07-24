@@ -4,9 +4,9 @@ import { Play, Upload, Link } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="px-6 pt-40 text-center bg-gradient-to-b from-blue-100 via-purple-50 to-pink-50">
+    <section className="px-6 pt-40 text-center bg-gradient-to-b from-amber-50/50 via-yellow-50/30 to-amber-50/40">
       <div className="max-w-4xl mx-auto">
-        <Badge className="mb-6 bg-blue-100 text-blue-800 hover:bg-blue-200">
+        <Badge className="mb-6 bg-amber-100 text-amber-800 hover:bg-amber-200">
           ✨ AI-Powered Transcription Service
         </Badge>
         <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
@@ -22,7 +22,7 @@ export default function Hero() {
             <Upload className="mr-2 h-5 w-5" />
             Upload File
           </Button>
-          <Button variant="outline" size="lg">
+          <Button variant="outline" size="lg" className="border-amber-200 text-amber-700 hover:bg-amber-50">
             <Link className="mr-2 h-5 w-5" />
             Paste Video Link
           </Button>

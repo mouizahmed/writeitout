@@ -63,7 +63,7 @@ export default function UseCases() {
   };
 
   return (
-    <section id="use-cases" className="py-12 bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
+    <section id="use-cases" className="py-12 bg-gradient-to-b from-amber-50/20 via-yellow-50/10 to-amber-50/15">
       <div className="px-6 max-w-6xl mx-auto mb-12">
         <h2 className="text-3xl font-bold text-gray-900 text-center">
           Your go-to solution for localization and productivity
