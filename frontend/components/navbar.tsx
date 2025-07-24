@@ -10,7 +10,7 @@ export default function Navbar() {
             {/* Logo */}
             <div className="flex items-center space-x-3">
               <Image 
-                src="/writeitout.svg" 
+                src="/logo2.svg" 
                 alt="WriteItOut Logo" 
                 width={50} 
                 height={50}

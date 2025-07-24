@@ -3,7 +3,7 @@ export default function Stats() {
     <section className="px-6 py-12 bg-gradient-to-b from-red-50 via-pink-50 to-purple-50">
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="text-3xl font-bold text-gray-900 mb-12">
-          Trusted by content creators worldwide
+          Built for performance and accuracy
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div>

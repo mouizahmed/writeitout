@@ -9,11 +9,11 @@ export default function Footer() {
             <div className="flex items-center space-x-2 mb-4">
          
               <Image 
-                src="/writeitout.svg" 
+                src="/logo2.svg" 
                 alt="WriteItOut Logo" 
                 width={50} 
                 height={50}
-                className="w-12 h-12 border border-gray-200 rounded-xl"
+                className="w-12 h-12 bg-white border-gray-200 rounded-xl"
               />
        
               <span className="font-bold text-white">WriteItOut</span>

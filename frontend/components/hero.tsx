@@ -11,7 +11,7 @@ export default function Hero() {
         </Badge>
         <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
           Transform any video into
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> perfect text</span>
+          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent"> perfect text</span>
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Upload files or paste any video link from the internet. Get accurate transcriptions, subtitles, and translations from YouTube, Vimeo, or any video URL.
