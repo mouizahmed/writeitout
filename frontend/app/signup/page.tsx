@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSignUp } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +24,12 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [error, setError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [code, setCode] = useState("");
+  
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const router = useRouter();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -29,36 +37,78 @@ export default function SignUpPage() {
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLoaded) return;
+    
     if (!acceptTerms) {
-      alert("Please accept the terms of service");
+      setError("Please accept the terms of service");
       return;
     }
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
     
     setIsLoading(true);
+    setError("");
     
-    // TODO: Implement email/password sign up
-    console.log("Email sign up:", formData);
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await signUp.create({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        emailAddress: formData.email,
+        password: formData.password,
+      });
+
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setVerifying(true);
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || "Sign up failed. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  const handleVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoaded) return;
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code,
+      });
+
+      if (completeSignUp.status === "complete") {
+        await setActive({ session: completeSignUp.createdSessionId });
+        router.push("/dashboard");
+      } else {
+        setError("Verification failed. Please try again.");
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || "Verification failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleSignUp = async () => {
+    if (!isLoaded) return;
+    
     setIsLoading(true);
+    setError("");
     
-    // TODO: Implement Google OAuth
-    console.log("Google sign up");
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/auth/callback",
+        redirectUrlComplete: "/dashboard",
+      });
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || "Google sign up failed. Please try again.");
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const passwordRequirements = [
@@ -67,6 +117,66 @@ export default function SignUpPage() {
     { label: "Contains lowercase letter", met: /[a-z]/.test(formData.password) },
     { label: "Contains number", met: /\d/.test(formData.password) },
   ];
+
+  if (verifying) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link href="/" className="flex items-center justify-center">
+              <Image src="/logo2.svg" alt="WriteItOut" width={100} height={100} className="w-12 h-12 bg-white border border-gray-200 rounded-xl" />
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900 mt-4">Verify your email</h1>
+            <p className="text-gray-600 mt-2">We sent a verification code to {formData.email}</p>
+          </div>
+
+          <Card>
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-xl">Email Verification</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                  {error}
+                </div>
+              )}
+              
+              <form onSubmit={handleVerification} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="code">Verification Code</Label>
+                  <Input
+                    id="code"
+                    type="text"
+                    placeholder="Enter 6-digit code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    maxLength={6}
+                  />
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading || code.length !== 6}>
+                  {isLoading ? "Verifying..." : "Verify Email"}
+                </Button>
+              </form>
+
+              <div className="text-center text-sm">
+                <span className="text-gray-600">Didn't receive the code? </span>
+                <button
+                  onClick={() => signUp?.prepareEmailAddressVerification({ strategy: "email_code" })}
+                  className="text-blue-600 hover:underline"
+                  disabled={isLoading}
+                >
+                  Resend
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
@@ -84,6 +194,11 @@ export default function SignUpPage() {
             <CardTitle className="text-xl">Sign up</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                {error}
+              </div>
+            )}
             {/* Google Sign Up Button */}
             <Button
               variant="outline"
@@ -264,6 +379,9 @@ export default function SignUpPage() {
                   </Link>
                 </Label>
               </div>
+
+              {/* Clerk CAPTCHA element */}
+              <div id="clerk-captcha"></div>
 
               <Button 
                 type="submit" 

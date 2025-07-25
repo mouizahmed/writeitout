@@ -9,6 +9,9 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/mouizahmed/justscribe-backend/internal/database"
+	"github.com/mouizahmed/justscribe-backend/internal/handlers"
+	"github.com/mouizahmed/justscribe-backend/internal/repository"
 )
 
 func main() {
@@ -17,6 +20,19 @@ func main() {
 		log.Fatal("Error loading cmd/api/.env file")
 	}
 
+	// Initialize database
+	db, err := database.New()
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	// Initialize repositories
+	userRepo := repository.NewUserRepository(db)
+
+	// Initialize handlers
+	clerkWebhookHandler := handlers.NewClerkWebhookHandler(userRepo)
+
 	// Initialize the router
 	router := gin.Default()
 
@@ -24,7 +40,7 @@ func main() {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Cache-Control", "Connection", "Access-Control-Allow-Origin"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Cache-Control", "Connection", "Access-Control-Allow-Origin", "svix-id", "svix-timestamp", "svix-signature"},
 		ExposeHeaders: []string{"Content-Length", "Content-Type", "Cache-Control", "Content-Encoding", "Transfer-Encoding"},	
 		AllowCredentials: true,
 		MaxAge: 12 * time.Hour,
@@ -36,6 +52,9 @@ func main() {
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		})
+		
+		// Webhook routes
+		api.POST("/webhooks/clerk", clerkWebhookHandler.HandleClerkWebhook)
 	}
 
 	// Start the server

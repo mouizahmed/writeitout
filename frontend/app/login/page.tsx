@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSignIn } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,31 +17,55 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const router = useRouter();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLoaded) return;
+    
     setIsLoading(true);
+    setError("");
     
-    // TODO: Implement email/password login
-    console.log("Email login:", { email, password });
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        router.push("/dashboard");
+      } else {
+        setError("Login failed. Please try again.");
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || "Login failed. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleGoogleLogin = async () => {
+    if (!isLoaded) return;
+    
     setIsLoading(true);
+    setError("");
     
-    // TODO: Implement Google OAuth
-    console.log("Google login");
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/auth/callback",
+        redirectUrlComplete: "/dashboard",
+      });
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || "Google login failed. Please try again.");
       setIsLoading(false);
-    }, 1000);
+    }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -56,6 +82,12 @@ export default function LoginPage() {
             <CardTitle className="text-xl">Sign in</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                {error}
+              </div>
+            )}
+            
             {/* Google Login Button */}
             <Button
               variant="outline"
@@ -75,6 +107,9 @@ export default function LoginPage() {
                 <span className="bg-white px-2 text-gray-500">Or continue with</span>
               </div>
             </div>
+
+            {/* Clerk CAPTCHA element for Google OAuth registration */}
+            <div id="clerk-captcha"></div>
 
             {/* Email/Password Form */}
             <form onSubmit={handleEmailLogin} className="space-y-4">
@@ -120,19 +155,9 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <Label htmlFor="remember" className="text-sm">
-                    Remember me
-                  </Label>
-                </div>
+              <div className="flex items-center justify-end">
                 <Link
-                  href="/forgot-password"
+                  href="/password-reset"
                   className="text-sm text-blue-600 hover:underline"
                 >
                   Forgot password?
@@ -152,8 +177,6 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
-
-
       </div>
     </div>
   );

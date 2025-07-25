@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -18,8 +20,35 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { FilesTable, type FileItem } from "@/components/files-table";
 
 export default function Dashboard() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
+    setSelectedFiles(selectedFiles.map(file => file.id));
+  }, []);
+
+  // Redirect if not authenticated (using useEffect to avoid render-time side effects)
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push('/login');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  // Show loading state while Clerk is loading
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (prevents API spam)
+  if (isLoaded && !isSignedIn) {
+    return null;
+  }
 
   // Mock data for files
   const files: FileItem[] = [
@@ -56,11 +85,6 @@ export default function Dashboard() {
       tags: ["Add tags"]
     }
   ];
-
-
-  const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
-    setSelectedFiles(selectedFiles.map(file => file.id));
-  }, []);
 
   return (
     <SidebarProvider>
