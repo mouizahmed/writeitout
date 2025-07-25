@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mouizahmed/justscribe-backend/internal/database"
 	"github.com/mouizahmed/justscribe-backend/internal/handlers"
+	"github.com/mouizahmed/justscribe-backend/internal/middleware"
 	"github.com/mouizahmed/justscribe-backend/internal/repository"
 )
 
@@ -32,18 +33,19 @@ func main() {
 
 	// Initialize handlers
 	clerkWebhookHandler := handlers.NewClerkWebhookHandler(userRepo)
+	userHandler := handlers.NewUserHandler(userRepo)
 
 	// Initialize the router
 	router := gin.Default()
 
 	// Configure CORS
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Cache-Control", "Connection", "Access-Control-Allow-Origin", "svix-id", "svix-timestamp", "svix-signature"},
-		ExposeHeaders: []string{"Content-Length", "Content-Type", "Cache-Control", "Content-Encoding", "Transfer-Encoding"},	
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "Cache-Control", "Connection", "Access-Control-Allow-Origin", "svix-id", "svix-timestamp", "svix-signature"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type", "Cache-Control", "Content-Encoding", "Transfer-Encoding"},
 		AllowCredentials: true,
-		MaxAge: 12 * time.Hour,
+		MaxAge:           12 * time.Hour,
 	}))
 
 	// API Routes
@@ -52,9 +54,17 @@ func main() {
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		})
-		
-		// Webhook routes
+
+		// Webhook routes (no auth required)
 		api.POST("/webhooks/clerk", clerkWebhookHandler.HandleClerkWebhook)
+
+		// Authenticated routes
+		authenticated := api.Group("/")
+		authenticated.Use(middleware.AuthMiddleware())
+		{
+			// User routes
+			authenticated.GET("/user/me", userHandler.GetCurrentUser)
+		}
 	}
 
 	// Start the server
@@ -70,4 +80,3 @@ func main() {
 		log.Printf("Server started on port %s", port)
 	}
 }
-

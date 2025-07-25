@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link'
+import { useAuth } from '@clerk/nextjs'
 import {
   BadgeCheck,
   Bell,
@@ -36,6 +37,11 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { signOut } = useAuth()
+
+  const handleLogout = async () => {
+    await signOut()
+  }
 
   return (
     <SidebarMenu>
@@ -108,7 +114,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

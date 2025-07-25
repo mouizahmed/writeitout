@@ -10,13 +10,15 @@ import {
 } from '@/components/ui/sidebar'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
-import { TeamSwitcher } from './team-switcher'
 import { sidebarData } from './sidebar-data'
+import { useUser } from '@/hooks/use-user'
+import { Badge } from '@/components/ui/badge'
+import { Crown, Zap } from 'lucide-react'
 import Image from 'next/image'
 
 function SidebarHeaderContent() {
   const { state } = useSidebar()
-  
+    
   if (state === 'collapsed') {
     return (
       <div className="flex items-center justify-center">
@@ -49,6 +51,44 @@ function SidebarHeaderContent() {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user, loading, error } = useUser()
+
+  // Create user object with database data or fallback to sidebar data
+  const userData = user ? {
+    name: user.name || 'Unknown User',
+    email: user.email || 'No email',
+    avatar: user.avatar_url || sidebarData.user.avatar,
+  } : sidebarData.user
+
+  // Helper functions for plan and quota display
+  const getPlanIcon = (plan: string) => {
+    switch (plan) {
+      case 'pro':
+      case 'enterprise':
+        return <Crown className="w-3 h-3" />;
+      default:
+        return <Zap className="w-3 h-3" />;
+    }
+  };
+
+  const getPlanColor = (plan: string) => {
+    switch (plan) {
+      case 'pro':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+      case 'enterprise':
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+      default:
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
+    }
+  };
+
+  const getQuotaColor = (used: number, limit: number) => {
+    const percentage = (used / limit) * 100;
+    if (percentage >= 90) return 'bg-red-100 text-red-800';
+    if (percentage >= 75) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-gray-100 text-gray-800';
+  };
+
   return (
     <Sidebar collapsible='icon' variant='floating' {...props}>
       <SidebarHeader className="bg-amber-50/20">
@@ -58,9 +98,37 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {sidebarData.navGroups.map((props) => (
           <NavGroup key={props.title} {...props} />
         ))}
+        
       </SidebarContent>
       <SidebarFooter className="bg-amber-50/20">
-        <NavUser user={sidebarData.user} />
+        {loading ? (
+          <div className="flex items-center justify-center p-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600"></div>
+          </div>
+        ) : error ? (
+          <div className="p-4 text-xs text-red-600">
+            Failed to load user
+          </div>
+        ) : user ? (
+          <div className="space-y-4">
+            {/* Plan and Quota Display */}
+            <div className="px-4 pt-4 space-y-2">
+              <div className="text-xs font-medium text-muted-foreground mb-2">Usage</div>
+              <div className="space-y-2">
+                <Badge variant="secondary" className={`${getPlanColor(user.plan)} border-0 w-full justify-start text-xs`}>
+                  {getPlanIcon(user.plan)}
+                  <span className="ml-1 capitalize">{user.plan} Plan</span>
+                </Badge>
+                <Badge variant="secondary" className={`${getQuotaColor(user.api_quota_used, user.api_quota_limit)} border-0 w-full justify-start text-xs`}>
+                  <span>API: {user.api_quota_used.toLocaleString()} / {user.api_quota_limit.toLocaleString()}</span>
+                </Badge>
+              </div>
+            </div>
+            
+            {/* User Profile */}
+            <NavUser user={userData} />
+          </div>
+        ) : null}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

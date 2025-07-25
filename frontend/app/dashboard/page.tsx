@@ -29,6 +29,7 @@ export default function Dashboard() {
     setSelectedFiles(selectedFiles.map(file => file.id));
   }, []);
 
+
   // Redirect if not authenticated (using useEffect to avoid render-time side effects)
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
