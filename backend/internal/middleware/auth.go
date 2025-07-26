@@ -61,6 +61,11 @@ func AuthMiddleware() gin.HandlerFunc {
 				claims, err = jwt.Verify(context.Background(), &jwt.VerifyParams{
 					Token: token,
 				})
+				if err != nil {
+					log.Printf("JWT verification failed after retry: %v", err)
+				} else {
+					log.Printf("JWT verification succeeded after retry")
+				}
 			}
 			
 			if err != nil {

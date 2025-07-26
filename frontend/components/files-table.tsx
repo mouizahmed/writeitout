@@ -43,7 +43,7 @@ const getFileIcon = (type: string) => {
   }
 };
 
-export const columns: ColumnDef<FileItem>[] = [
+const createColumns = (onFolderClick?: (folderId: string) => void): ColumnDef<FileItem>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -71,12 +71,27 @@ export const columns: ColumnDef<FileItem>[] = [
     header: "Name",
     cell: ({ row }) => {
       const file = row.original;
-      return (
+      const isFolder = file.type === "folder";
+      
+      const content = (
         <div className="flex items-center space-x-3">
           {getFileIcon(file.type)}
           <span className="font-medium">{file.name}</span>
         </div>
       );
+
+      if (isFolder && onFolderClick) {
+        return (
+          <button
+            onClick={() => onFolderClick(file.id)}
+            className="text-left hover:underline focus:outline-none"
+          >
+            {content}
+          </button>
+        );
+      }
+
+      return content;
     },
   },
   {
@@ -178,9 +193,12 @@ export const columns: ColumnDef<FileItem>[] = [
 interface FilesTableProps {
   data: FileItem[];
   onSelectionChange?: (selectedFiles: FileItem[]) => void;
+  onFolderClick?: (folderId: string) => void;
 }
 
-export function FilesTable({ data, onSelectionChange }: FilesTableProps) {
+export function FilesTable({ data, onSelectionChange, onFolderClick }: FilesTableProps) {
+  const columns = createColumns(onFolderClick);
+  
   return (
     <div className="w-full min-w-[800px]">
       <DataTable 

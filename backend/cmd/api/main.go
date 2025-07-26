@@ -15,6 +15,10 @@ import (
 	"github.com/mouizahmed/justscribe-backend/internal/repository"
 )
 
+func init() {
+	gin.SetMode(gin.ReleaseMode)
+}
+
 func main() {
 	err := godotenv.Load("cmd/api/.env")
 	if err != nil {
@@ -30,10 +34,12 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
+	folderRepo := repository.NewFolderRepository(db)
 
 	// Initialize handlers
 	clerkWebhookHandler := handlers.NewClerkWebhookHandler(userRepo)
 	userHandler := handlers.NewUserHandler(userRepo)
+	folderHandler := handlers.NewFolderHandler(folderRepo)
 
 	// Initialize the router
 	router := gin.Default()
@@ -64,6 +70,11 @@ func main() {
 		{
 			// User routes
 			authenticated.GET("/user/me", userHandler.GetCurrentUser)
+
+			// Folder routes
+			authenticated.GET("/folders", folderHandler.GetFolderData)
+			authenticated.GET("/folders/:id", folderHandler.GetFolderData)
+			authenticated.POST("/folders", folderHandler.CreateFolder)
 		}
 	}
 
