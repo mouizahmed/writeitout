@@ -5,7 +5,17 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { 
   Search, 
   Plus, 
@@ -24,10 +34,44 @@ export default function Dashboard() {
   const router = useRouter();
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Dialog state
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [folderName, setFolderName] = useState("");
+  const [folderError, setFolderError] = useState("");
 
   const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
     setSelectedFiles(selectedFiles.map(file => file.id));
   }, []);
+
+  // Handle folder creation
+  const handleCreateFolder = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFolderError("");
+
+    if (!folderName.trim()) {
+      setFolderError("Folder name is required");
+      return;
+    }
+
+    if (folderName.length > 255) {
+      setFolderError("Folder name must be less than 255 characters");
+      return;
+    }
+
+    // TODO: API call to create folder
+    console.log("Creating folder:", folderName);
+    
+    // Reset form and close dialog
+    setFolderName("");
+    setIsCreateFolderOpen(false);
+  };
+
+  const handleCloseDialog = () => {
+    setIsCreateFolderOpen(false);
+    setFolderName("");
+    setFolderError("");
+  };
 
 
   // Redirect if not authenticated (using useEffect to avoid render-time side effects)
@@ -155,10 +199,48 @@ export default function Dashboard() {
                         <Plus className="w-4 h-4 mr-1" />
                         Create
                       </Button>
-                      <Button variant="outline" size="sm">
-                        <FolderPlus className="w-4 h-4 mr-1" />
-                        Folder
-                      </Button>
+                      <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <FolderPlus className="w-4 h-4 mr-1" />
+                            Folder
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Create New Folder</DialogTitle>
+                            <DialogDescription>
+                              Enter a name for your new folder. You can organize your files by creating folders.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={handleCreateFolder}>
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="folder-name">Folder Name</Label>
+                                <Input
+                                  id="folder-name"
+                                  placeholder="Enter folder name..."
+                                  value={folderName}
+                                  onChange={(e) => setFolderName(e.target.value)}
+                                  className={folderError ? "border-red-500" : ""}
+                                />
+                                {folderError && (
+                                  <p className="text-sm text-red-600">{folderError}</p>
+                                )}
+                              </div>
+                            </div>
+                            <DialogFooter className="mt-6">
+                              <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                                Cancel
+                              </Button>
+                              <Button type="submit">
+                                <FolderPlus className="w-4 h-4 mr-2" />
+                                Create Folder
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                     
                     {/* Default create actions - Mobile */}
@@ -166,9 +248,13 @@ export default function Dashboard() {
                       <Button size="sm">
                         <Plus className="w-4 h-4" />
                       </Button>
-                      <Button variant="outline" size="sm">
-                        <FolderPlus className="w-4 h-4" />
-                      </Button>
+                      <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <FolderPlus className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                      </Dialog>
                     </div>
                   </>
                 )}
