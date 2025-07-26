@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FolderData, FolderDataResponse, FileItem } from '@/types/folder';
 import { useAuth } from '@clerk/nextjs';
+import { folderApi } from '@/lib/api';
 
 // Cache for folder data to avoid unnecessary refetches
 const folderDataCache = new Map<string, FolderDataResponse>();
@@ -54,25 +55,10 @@ export function useFolderData(folderId: string | null): FolderData {
         throw new Error('Authentication required');
       }
 
-      // Fetch from API
-      const endpoint = folderId 
-        ? `/folders/${folderId}` 
-        : `/folders`; // Root folder
-        
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${endpoint}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      // Fetch from centralized API
+      const result: FolderDataResponse = await folderApi.getFolderData(token, folderId || undefined);
 
-      console.log("Response:", response)
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch folder data: ${response.statusText}`);
-      }
-
-      const result: FolderDataResponse = await response.json();
+      console.log("Response:", result)
       
       // Cache the result
       folderDataCache.set(cacheKey, result);

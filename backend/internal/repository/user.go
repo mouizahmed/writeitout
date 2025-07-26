@@ -79,12 +79,8 @@ func (r *UserRepository) DeleteUser(id string) error {
 }
 
 func (r *UserRepository) GetUserByID(id string) (*models.User, error) {
-	query := `
-		SELECT id, email, name, avatar_url, plan, status, email_verified, 
-		       api_quota_used, api_quota_limit, created_at, updated_at, deleted_at
-		FROM users 
-		WHERE id = $1 AND deleted_at IS NULL
-	`
+	// Use a completely different query structure to avoid prepared statement cache issues
+	query := `SELECT u.id, u.email, u.name, u.avatar_url, u.plan, u.status, u.email_verified, u.api_quota_used, u.api_quota_limit, u.created_at, u.updated_at, u.deleted_at FROM users u WHERE u.id = $1 AND u.deleted_at IS NULL LIMIT 1`
 	
 	var user models.User
 	err := r.db.QueryRow(query, id).Scan(

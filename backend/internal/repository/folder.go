@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/mouizahmed/justscribe-backend/internal/database"
 	"github.com/mouizahmed/justscribe-backend/internal/models"
@@ -39,7 +40,10 @@ func (r *FolderRepository) GetFolderByID(folderID, userID string) (*models.Folde
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to get folder: %w", err)
+		if strings.Contains(err.Error(), "connection") {
+			return nil, fmt.Errorf("database connection error: unable to connect to database")
+		}
+		return nil, fmt.Errorf("database query error: failed to retrieve folder")
 	}
 
 	return &folder, nil
@@ -113,29 +117,25 @@ func (r *FolderRepository) GetFolderContents(folderID, userID string) (*models.F
 	}
 
 	// Get folders only for now
-	folderQuery := `
-		SELECT id, name, parent_id, user_id, created_at, updated_at
-		FROM folders
-		WHERE user_id = $1 AND deleted_at IS NULL
-	`
-
+	var folderQuery string
 	var folderArgs []interface{}
-	folderArgs = append(folderArgs, userID)
 
 	if folderID == "" {
 		// Root/dashboard level - get folders with no parent (parent_id IS NULL)
-		folderQuery += " AND parent_id IS NULL"
+		folderQuery = `SELECT id, name, parent_id, user_id, created_at, updated_at FROM folders WHERE user_id = $1 AND deleted_at IS NULL AND parent_id IS NULL ORDER BY name`
+		folderArgs = []interface{}{userID}
 	} else {
 		// Specific folder - get child folders
-		folderQuery += " AND parent_id = $2"
-		folderArgs = append(folderArgs, folderID)
+		folderQuery = `SELECT id, name, parent_id, user_id, created_at, updated_at FROM folders WHERE user_id = $1 AND deleted_at IS NULL AND parent_id = $2 ORDER BY name`
+		folderArgs = []interface{}{userID, folderID}
 	}
-
-	folderQuery += " ORDER BY name"
 
 	rows, err := r.db.Query(folderQuery, folderArgs...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get folders: %w", err)
+		if strings.Contains(err.Error(), "connection") {
+			return nil, fmt.Errorf("database connection error: unable to connect to database")
+		}
+		return nil, fmt.Errorf("database query error: failed to retrieve folders")
 	}
 	defer rows.Close()
 
@@ -150,7 +150,7 @@ func (r *FolderRepository) GetFolderContents(folderID, userID string) (*models.F
 			&folder.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan folder: %w", err)
+			return nil, fmt.Errorf("data parsing error: failed to read folder information")
 		}
 		contents.Folders = append(contents.Folders, folder)
 	}
@@ -207,6 +207,44 @@ func (r *FolderRepository) GetFolderData(folderID, userID string) (*models.Folde
 	return response, nil
 }
 
+// GetAllUserFolders retrieves all folders for a user (for tree view)
+func (r *FolderRepository) GetAllUserFolders(userID string) ([]models.Folder, error) {
+	query := `
+		SELECT id, name, parent_id, user_id, created_at, updated_at
+		FROM folders
+		WHERE user_id = $1 AND deleted_at IS NULL
+		ORDER BY name
+	`
+
+	rows, err := r.db.Query(query, userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "connection") {
+			return nil, fmt.Errorf("database connection error: unable to connect to database")
+		}
+		return nil, fmt.Errorf("database query error: failed to retrieve folders")
+	}
+	defer rows.Close()
+
+	var folders []models.Folder
+	for rows.Next() {
+		var folder models.Folder
+		err := rows.Scan(
+			&folder.ID,
+			&folder.Name,
+			&folder.ParentID,
+			&folder.UserID,
+			&folder.CreatedAt,
+			&folder.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("data parsing error: failed to read folder information")
+		}
+		folders = append(folders, folder)
+	}
+
+	return folders, nil
+}
+
 // CreateFolder creates a new folder
 func (r *FolderRepository) CreateFolder(name string, parentID *string, userID string) (*models.Folder, error) {
 	query := `
@@ -226,7 +264,16 @@ func (r *FolderRepository) CreateFolder(name string, parentID *string, userID st
 	)
 	
 	if err != nil {
-		return nil, fmt.Errorf("failed to create folder: %w", err)
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return nil, fmt.Errorf("folder already exists: a folder with this name already exists in this location")
+		}
+		if strings.Contains(err.Error(), "foreign key") {
+			return nil, fmt.Errorf("invalid parent folder: the specified parent folder does not exist")
+		}
+		if strings.Contains(err.Error(), "connection") {
+			return nil, fmt.Errorf("database connection error: unable to connect to database")
+		}
+		return nil, fmt.Errorf("database error: failed to create folder")
 	}
 	
 	return &folder, nil

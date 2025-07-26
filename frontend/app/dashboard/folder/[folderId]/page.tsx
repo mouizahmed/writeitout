@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,6 @@ import {
   ChevronLeft,
   Home
 } from "lucide-react";
-import { AppSidebar } from "@/components/layout/app-sidebar";
 import { FilesTable, type FileItem } from "@/components/files-table";
 import { FolderDialog } from "@/components/folder-dialog";
 import { useFolderContext } from "@/hooks/use-folder-context";
@@ -96,10 +95,7 @@ export default function FolderPage() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-
-      <div className="flex-1 flex flex-col min-w-0">
+    <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex h-14 items-center gap-2 px-4 sm:px-6">
@@ -283,16 +279,15 @@ export default function FolderPage() {
             </div>
           )}
         </main>
+        
+        {/* Folder Creation Dialog */}
+        <FolderDialog 
+          open={isCreateFolderOpen}
+          onOpenChange={setIsCreateFolderOpen}
+          parentFolderId={currentFolderId}
+          parentFolderName={folder?.name || "Unknown Folder"}
+          onFolderCreated={refetch}
+        />
       </div>
-
-      {/* Folder Creation Dialog */}
-      <FolderDialog 
-        open={isCreateFolderOpen}
-        onOpenChange={setIsCreateFolderOpen}
-        parentFolderId={currentFolderId}
-        parentFolderName={folder?.name || "Unknown Folder"}
-        onFolderCreated={refetch}
-      />
-    </SidebarProvider>
   );
 }

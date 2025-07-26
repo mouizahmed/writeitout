@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { 
   Upload,
   FileAudio,
@@ -30,7 +30,6 @@ import {
   Link as LinkIcon,
   Globe
 } from "lucide-react";
-import { AppSidebar } from "@/components/layout/app-sidebar";
 import Link from "next/link";
 
 interface UploadedFile {
@@ -212,10 +211,7 @@ export default function CreateTranscript() {
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      
-      <div className="flex-1 flex flex-col min-w-0">
+    <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex h-14 items-center gap-2 px-4 sm:px-6">
@@ -521,6 +517,5 @@ export default function CreateTranscript() {
           </div>
         </main>
       </div>
-    </SidebarProvider>
   );
 }

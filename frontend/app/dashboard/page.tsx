@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +24,6 @@ import {
   ChevronDown,
   FileAudio
 } from "lucide-react";
-import { AppSidebar } from "@/components/layout/app-sidebar";
 import { FilesTable, type FileItem } from "@/components/files-table";
 import { FolderDialog } from "@/components/folder-dialog";
 import { useFolderContext } from "@/hooks/use-folder-context";
@@ -95,10 +94,7 @@ export default function Dashboard() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-
-      <div className="flex-1 flex flex-col min-w-0">
+    <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
           <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex h-14 items-center gap-2 px-4 sm:px-6">
@@ -241,16 +237,15 @@ export default function Dashboard() {
               </div>
             )}
           </main>
-        </div>
-
-      {/* Folder Creation Dialog */}
-      <FolderDialog 
-        open={isCreateFolderOpen}
-        onOpenChange={setIsCreateFolderOpen}
-        parentFolderId={currentFolderId}
-        parentFolderName="Dashboard"
-        onFolderCreated={refetch}
-      />
-    </SidebarProvider>
+        
+        {/* Folder Creation Dialog */}
+        <FolderDialog 
+          open={isCreateFolderOpen}
+          onOpenChange={setIsCreateFolderOpen}
+          parentFolderId={currentFolderId}
+          parentFolderName="Dashboard"
+          onFolderCreated={refetch}
+        />
+      </div>
   );
 }

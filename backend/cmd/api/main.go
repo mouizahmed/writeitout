@@ -73,6 +73,7 @@ func main() {
 
 			// Folder routes
 			authenticated.GET("/folders", folderHandler.GetFolderData)
+			authenticated.GET("/folders/all", folderHandler.GetAllFolders) // New endpoint for folder tree
 			authenticated.GET("/folders/:id", folderHandler.GetFolderData)
 			authenticated.POST("/folders", folderHandler.CreateFolder)
 		}

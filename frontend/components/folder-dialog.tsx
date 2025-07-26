@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { addFolderToCache } from "@/hooks/use-folder-data";
+import { useFolderTree } from "@/contexts/folder-tree-context";
+import { folderApi, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +34,7 @@ export function FolderDialog({
   onFolderCreated
 }: FolderDialogProps) {
   const { getToken } = useAuth();
+  const { addFolderToTree } = useFolderTree();
   const [folderName, setFolderName] = useState("");
   const [folderError, setFolderError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -59,29 +62,20 @@ export function FolderDialog({
         throw new Error('Authentication required');
       }
 
-      // Create folder via API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/folders`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: folderName,
-          parent_id: parentFolderId
-        }),
+      // Create folder via centralized API
+      const createdFolder = await folderApi.createFolder(token, {
+        name: folderName,
+        parent_id: parentFolderId
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to create folder: ${response.statusText}`);
-      }
-
-      const createdFolder = await response.json();
       console.log("Folder created successfully:", createdFolder);
       
       // Optimistically update the cache with the new folder
       addFolderToCache(parentFolderId, createdFolder);
+      
+      // Add the new folder to the sidebar tree
+      if (addFolderToTree.current) {
+        addFolderToTree.current(createdFolder);
+      }
       
       // Reset form and close dialog
       setFolderName("");
@@ -93,7 +87,12 @@ export function FolderDialog({
       }
     } catch (error) {
       console.error("Failed to create folder:", error);
-      setFolderError(error instanceof Error ? error.message : "Failed to create folder. Please try again.");
+      if (error instanceof ApiError) {
+        // Handle specific API errors with better messages
+        setFolderError(error.message);
+      } else {
+        setFolderError(error instanceof Error ? error.message : "Failed to create folder. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

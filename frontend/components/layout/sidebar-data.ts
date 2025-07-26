@@ -25,12 +25,6 @@ export const sidebarData: SidebarData = {
       title: 'Files',
       items: [
         {
-          title: 'All files',
-          url: '/dashboard',
-          icon: Folder,
-          badge: '2'
-        },
-        {
           title: 'Trash',
           url: '/dashboard/trash',
           icon: Trash2
