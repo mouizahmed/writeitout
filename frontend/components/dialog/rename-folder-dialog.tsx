@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { folderApi, ApiError } from "@/lib/api";
+import { useFolderTree } from "@/contexts/folder-tree-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,7 @@ export function RenameFolderDialog({
   onFolderRenamed
 }: RenameFolderDialogProps) {
   const { getToken } = useAuth();
+  const { updateFolderInTree } = useFolderTree();
   const [folderName, setFolderName] = useState(currentName);
   const [folderError, setFolderError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -78,11 +80,16 @@ export function RenameFolderDialog({
       });
       console.log("Folder renamed successfully:", updatedFolder);
       
+      // Update folder tree immediately with the response data
+      if (updateFolderInTree.current) {
+        updateFolderInTree.current(updatedFolder);
+      }
+      
       // Reset form and close dialog
       setFolderName("");
       onOpenChange(false);
       
-      // Trigger refresh to update UI
+      // Trigger refresh to update UI (for breadcrumbs and current folder data)
       if (onFolderRenamed) {
         onFolderRenamed();
       }

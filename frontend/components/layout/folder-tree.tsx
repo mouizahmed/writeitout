@@ -27,9 +27,10 @@ interface FolderNode {
 interface FolderTreeProps {
   title?: string;
   onAddFolder?: (addFolderFn: (newFolder: FolderType) => void) => void;
+  onUpdateFolder?: (updateFolderFn: (updatedFolder: FolderType) => void) => void;
 }
 
-export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) {
+export function FolderTree({ title = "Folders", onAddFolder, onUpdateFolder }: FolderTreeProps) {
   const { getToken } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -92,12 +93,51 @@ export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) 
     });
   }, []);
 
+  // Function to update a folder in the tree without refetching
+  const updateFolderInTree = useCallback((updatedFolder: FolderType) => {
+    console.log('Updating folder in tree:', updatedFolder);
+    
+    setFolders(currentFolders => {
+      const updateFolderNode = (folders: FolderNode[]): FolderNode[] => {
+        return folders.map(folder => {
+          if (folder.id === updatedFolder.id) {
+            // Found the folder to update
+            return {
+              ...folder,
+              name: updatedFolder.name,
+              parent_id: updatedFolder.parent_id,
+            };
+          }
+          
+          // Recursively check children
+          if (folder.children && folder.children.length > 0) {
+            return {
+              ...folder,
+              children: updateFolderNode(folder.children),
+            };
+          }
+          
+          return folder;
+        });
+      };
+
+      return updateFolderNode(currentFolders);
+    });
+  }, []);
+
   // Expose add folder function to parent component
   useEffect(() => {
     if (onAddFolder) {
       onAddFolder(addFolderToTree);
     }
   }, [onAddFolder, addFolderToTree]);
+
+  // Expose update folder function to parent component
+  useEffect(() => {
+    if (onUpdateFolder) {
+      onUpdateFolder(updateFolderInTree);
+    }
+  }, [onUpdateFolder, updateFolderInTree]);
 
   const buildFolderTree = useCallback((flatFolders: FolderType[]): FolderNode[] => {
     console.log('Building tree from flat folders:', flatFolders); // Debug log
