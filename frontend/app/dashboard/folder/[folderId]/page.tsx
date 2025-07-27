@@ -36,7 +36,7 @@ export default function FolderPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const { currentFolderId } = useFolderContext();
-  const { folder, breadcrumbs, files, loading, error, refetch } = useFolderData(currentFolderId);
+  const { folder, breadcrumbs, files, loading, error, refetch, updateFolder, addFolder } = useFolderData(currentFolderId);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
@@ -292,7 +292,7 @@ export default function FolderPage() {
           onOpenChange={setIsCreateFolderOpen}
           parentFolderId={currentFolderId}
           parentFolderName={folder?.name || "Unknown Folder"}
-          onFolderCreated={refetch}
+          onFolderCreated={addFolder}
         />
         
         {/* Folder Rename Dialog */}
@@ -302,7 +302,7 @@ export default function FolderPage() {
             onOpenChange={setIsRenameFolderOpen}
             folderId={folder.id}
             currentName={folder.name}
-            onFolderRenamed={refetch}
+            onFolderRenamed={updateFolder}
           />
         )}
       </div>

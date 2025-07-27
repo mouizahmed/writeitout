@@ -22,7 +22,7 @@ interface RenameFolderDialogProps {
   onOpenChange: (open: boolean) => void;
   folderId: string;
   currentName: string;
-  onFolderRenamed?: () => void; // Callback to refresh folder data
+  onFolderRenamed?: (updatedFolder: any) => void; // Callback to update folder data
 }
 
 export function RenameFolderDialog({ 
@@ -89,9 +89,9 @@ export function RenameFolderDialog({
       setFolderName("");
       onOpenChange(false);
       
-      // Trigger refresh to update UI (for breadcrumbs and current folder data)
+      // Update folder data (for breadcrumbs and current folder data)
       if (onFolderRenamed) {
-        onFolderRenamed();
+        onFolderRenamed(updatedFolder);
       }
     } catch (error) {
       console.error("Failed to rename folder:", error);

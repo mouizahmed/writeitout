@@ -34,7 +34,7 @@ export default function Dashboard() {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const { currentFolderId } = useFolderContext();
-  const { files, loading, error, refetch } = useFolderData(currentFolderId); // null for root folder
+  const { files, loading, error, refetch, addFolder } = useFolderData(currentFolderId); // null for root folder
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
@@ -243,7 +243,7 @@ export default function Dashboard() {
           onOpenChange={setIsCreateFolderOpen}
           parentFolderId={currentFolderId}
           parentFolderName="Dashboard"
-          onFolderCreated={refetch}
+          onFolderCreated={addFolder}
         />
       </div>
   );

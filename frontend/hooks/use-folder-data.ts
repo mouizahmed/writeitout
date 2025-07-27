@@ -15,7 +15,65 @@ export function useFolderData(folderId: string | null): FolderData {
     loading: true,
     error: null,
     refetch: async () => {},
+    updateFolder: () => {},
+    addFolder: () => {},
   });
+
+  const updateFolder = useCallback((updatedFolder: Folder) => {
+    setData(prev => {
+      // Update current folder if it's the one being renamed
+      const updatedCurrentFolder = prev.folder?.id === updatedFolder.id ? updatedFolder : prev.folder;
+      
+      // Update breadcrumbs if any breadcrumb matches the updated folder
+      const updatedBreadcrumbs = prev.breadcrumbs.map(breadcrumb => 
+        breadcrumb.id === updatedFolder.id 
+          ? { ...breadcrumb, name: updatedFolder.name }
+          : breadcrumb
+      );
+
+      return {
+        ...prev,
+        folder: updatedCurrentFolder,
+        breadcrumbs: updatedBreadcrumbs,
+      };
+    });
+  }, []);
+
+  const addFolder = useCallback((newFolder: Folder) => {
+    setData(prev => {
+      // Add the new folder to the files list (only if it belongs to the current folder)
+      // Check if the new folder belongs to the current folder or is a root folder (when we're on dashboard)
+      const shouldAddToCurrentView = (
+        (!folderId && !newFolder.parent_id) || // Root folder when on dashboard
+        (folderId && newFolder.parent_id === folderId) // Child folder when in a specific folder
+      );
+
+      if (!shouldAddToCurrentView) {
+        return prev; // Don't add folder if it doesn't belong to current view
+      }
+
+      // Create new folder item for the table display
+      const newFolderItem: FileItem = {
+        id: newFolder.id,
+        name: newFolder.name,
+        type: 'folder' as const,
+        created_at: newFolder.created_at,
+      };
+
+      // Add to files list and sort
+      const updatedFiles = [...prev.files, newFolderItem].sort((a, b) => {
+        // Sort folders first, then by name
+        if (a.type === 'folder' && b.type !== 'folder') return -1;
+        if (a.type !== 'folder' && b.type === 'folder') return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      return {
+        ...prev,
+        files: updatedFiles,
+      };
+    });
+  }, [folderId]);
 
   const fetchFolderData = useCallback(async () => {
     try {
@@ -43,6 +101,8 @@ export function useFolderData(folderId: string | null): FolderData {
           loading: false,
           error: null,
           refetch: fetchFolderData,
+          updateFolder,
+          addFolder,
         });
         return;
       }
@@ -81,6 +141,8 @@ export function useFolderData(folderId: string | null): FolderData {
         loading: false,
         error: null,
         refetch: fetchFolderData,
+        updateFolder,
+        addFolder,
       });
     } catch (err) {
       console.error('Failed to fetch folder data:', err);
@@ -90,7 +152,7 @@ export function useFolderData(folderId: string | null): FolderData {
         error: err instanceof Error ? err.message : 'Failed to load folder data'
       }));
     }
-  }, [folderId, getToken]);
+  }, [folderId, getToken, updateFolder, addFolder]);
 
   // Refetch data when folderId changes
   useEffect(() => {

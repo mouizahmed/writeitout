@@ -23,7 +23,7 @@ interface FolderDialogProps {
   onOpenChange: (open: boolean) => void;
   parentFolderId?: string | null;
   parentFolderName?: string;
-  onFolderCreated?: () => void; // Callback to refresh folder data
+  onFolderCreated?: (newFolder: any) => void; // Callback to update folder data
 }
 
 export function FolderDialog({ 
@@ -81,9 +81,9 @@ export function FolderDialog({
       setFolderName("");
       onOpenChange(false);
       
-      // Trigger refresh to update UI (will use cached data, so it's instant)
+      // Update folder data instantly
       if (onFolderCreated) {
-        onFolderCreated();
+        onFolderCreated(createdFolder);
       }
     } catch (error) {
       console.error("Failed to create folder:", error);
