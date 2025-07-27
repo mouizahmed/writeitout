@@ -47,7 +47,7 @@ func main() {
 	// Configure CORS
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "Cache-Control", "Connection", "Access-Control-Allow-Origin", "svix-id", "svix-timestamp", "svix-signature"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Type", "Cache-Control", "Content-Encoding", "Transfer-Encoding"},
 		AllowCredentials: true,
@@ -73,10 +73,10 @@ func main() {
 
 			// Folder routes
 			authenticated.GET("/folders", folderHandler.GetFolderData)
-			authenticated.GET("/folders/all", folderHandler.GetAllFolders) // New endpoint for folder tree
+			authenticated.GET("/folders/all", folderHandler.GetAllFolders)
 			authenticated.GET("/folders/:id", folderHandler.GetFolderData)
 			authenticated.POST("/folders", folderHandler.CreateFolder)
-			authenticated.PUT("/folders/:id", folderHandler.UpdateFolder) // New endpoint for updating folders
+			authenticated.PATCH("/folders/:id", folderHandler.UpdateFolder)
 		}
 	}
 

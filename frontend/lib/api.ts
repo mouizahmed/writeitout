@@ -69,7 +69,7 @@ export const folderApi = {
   // Update a folder
   updateFolder: (token: string, folderId: string, data: { name: string }): Promise<Folder> =>
     apiRequest<Folder>(`/folders/${folderId}`, token, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     }),
 
