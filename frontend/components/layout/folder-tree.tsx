@@ -27,10 +27,9 @@ interface FolderNode {
 interface FolderTreeProps {
   title?: string;
   onAddFolder?: (addFolderFn: (newFolder: FolderType) => void) => void;
-  onRefreshFolder?: (refreshFn: () => void) => void;
 }
 
-export function FolderTree({ title = "Folders", onAddFolder, onRefreshFolder }: FolderTreeProps) {
+export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) {
   const { getToken } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -199,13 +198,6 @@ export function FolderTree({ title = "Folders", onAddFolder, onRefreshFolder }: 
   useEffect(() => {
     fetchFolderTree();
   }, [fetchFolderTree]);
-
-  // Expose refresh function to parent component
-  useEffect(() => {
-    if (onRefreshFolder) {
-      onRefreshFolder(fetchFolderTree);
-    }
-  }, [onRefreshFolder, fetchFolderTree]);
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolders(prev => {

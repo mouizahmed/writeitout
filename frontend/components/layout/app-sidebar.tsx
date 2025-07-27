@@ -37,7 +37,7 @@ function SidebarHeaderContent() {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, loading, error } = useUser()
-  const { addFolderToTree, refreshFolderTree } = useFolderTree()
+  const { addFolderToTree } = useFolderTree()
 
   // Create user object with database data
   const userData = user ? {
@@ -88,7 +88,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* Folder Tree */}
         <FolderTree 
           onAddFolder={(fn) => { addFolderToTree.current = fn; }} 
-          onRefreshFolder={(fn) => { refreshFolderTree.current = fn; }}
         />
         
         {sidebarData.navGroups.map((props) => (
