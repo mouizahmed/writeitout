@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useSignIn, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, Chrome } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 
 export default function LoginPage() {
@@ -54,8 +54,9 @@ export default function LoginPage() {
       } else {
         setError("Login failed. Please try again.");
       }
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "Login failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ message: string }> };
+      setError(error.errors?.[0]?.message || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -73,8 +74,9 @@ export default function LoginPage() {
         redirectUrl: "/auth/callback",
         redirectUrlComplete: "/dashboard",
       });
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "Google login failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ message: string }> };
+      setError(error.errors?.[0]?.message || "Google login failed. Please try again.");
       setIsLoading(false);
     }
   };
@@ -183,7 +185,7 @@ export default function LoginPage() {
             </form>
 
             <div className="text-center text-sm">
-              <span className="text-gray-600">Don't have an account? </span>
+              <span className="text-gray-600">Don&apos;t have an account? </span>
               <Link href="/signup" className="text-blue-600 hover:underline">
                 Sign up
               </Link>

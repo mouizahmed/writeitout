@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { 
   Select,
   SelectContent,
@@ -63,46 +62,6 @@ export default function CreateTranscript() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
 
-  // Redirect if not authenticated
-  if (isLoaded && !isSignedIn) {
-    router.push('/login');
-    return null;
-  }
-
-  // Show loading state while Clerk is loading
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    handleFiles(files);
-  }, []);
-
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      handleFiles(files);
-    }
-  }, []);
-
   const handleFiles = useCallback((files: File[]) => {
     const validFiles = files.filter(file => {
       const isAudio = file.type.startsWith('audio/');
@@ -122,9 +81,50 @@ export default function CreateTranscript() {
     setUploadedFiles(prev => [...prev, ...newFiles]);
   }, []);
 
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  }, [handleFiles]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      handleFiles(files);
+    }
+  }, [handleFiles]);
+
   const removeFile = useCallback((id: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== id));
   }, []);
+
+  // Redirect if not authenticated
+  if (isLoaded && !isSignedIn) {
+    router.push('/login');
+    return null;
+  }
+
+  // Show loading state while Clerk is loading
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';

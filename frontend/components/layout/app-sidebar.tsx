@@ -6,7 +6,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
@@ -16,7 +15,6 @@ import { useUser } from '@/hooks/use-user'
 import { Badge } from '@/components/ui/badge'
 import { Crown, Zap } from 'lucide-react'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
 import { useFolderTree } from '@/contexts/folder-tree-context'
 
 function SidebarHeaderContent() {
@@ -39,7 +37,7 @@ function SidebarHeaderContent() {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, loading, error } = useUser()
-  const { addFolderToTree } = useFolderTree()
+  const { addFolderToTree, refreshFolderTree } = useFolderTree()
 
   // Create user object with database data
   const userData = user ? {
@@ -88,7 +86,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent className="bg-amber-50/15">
         {/* Folder Tree */}
-        <FolderTree onAddFolder={(fn) => { addFolderToTree.current = fn; }} />
+        <FolderTree 
+          onAddFolder={(fn) => { addFolderToTree.current = fn; }} 
+          onRefreshFolder={(fn) => { refreshFolderTree.current = fn; }}
+        />
         
         {sidebarData.navGroups.map((props) => (
           <NavGroup key={props.title} {...props} />
@@ -107,14 +108,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ) : user ? (
           <div className="space-y-4">
             {/* Plan and Quota Display */}
-            <div className="px-4 pt-4 space-y-2">
+            <div className="pt-4 space-y-2">
               <div className="text-xs font-medium text-muted-foreground mb-2">Usage</div>
               <div className="space-y-2">
-                <Badge variant="secondary" className={`${getPlanColor(user.plan)} border-0 w-full justify-start text-xs`}>
+                <Badge variant="secondary" className={`${getPlanColor(user.plan)} border-0 rounded-lg w-full h-10 justify-start text-xs`}>
                   {getPlanIcon(user.plan)}
                   <span className="ml-1 capitalize">{user.plan} Plan</span>
                 </Badge>
-                <Badge variant="secondary" className={`${getQuotaColor(user.api_quota_used, user.api_quota_limit)} border-0 w-full justify-start text-xs`}>
+                <Badge variant="secondary" className={`${getQuotaColor(user.api_quota_used, user.api_quota_limit)} border-0 rounded-lg w-full h-10 justify-start text-xs`}>
                   <span>API: {user.api_quota_used.toLocaleString()} / {user.api_quota_limit.toLocaleString()}</span>
                 </Badge>
               </div>

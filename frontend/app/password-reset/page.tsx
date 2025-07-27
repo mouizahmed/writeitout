@@ -46,7 +46,7 @@ export default function PasswordResetPage() {
         identifier: email,
       });
 
-      const firstFactor = signIn.supportedFirstFactors.find(
+      const firstFactor = signIn.supportedFirstFactors?.find(
         (factor) => factor.strategy === "reset_password_email_code"
       );
 
@@ -57,8 +57,9 @@ export default function PasswordResetPage() {
         });
         setResetStep("code");
       }
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "Password reset failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ message: string }> };
+      setError(error.errors?.[0]?.message || "Password reset failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -82,8 +83,9 @@ export default function PasswordResetPage() {
         await setActive({ session: result.createdSessionId });
         router.push("/dashboard");
       }
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "Password reset failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ message: string }> };
+      setError(error.errors?.[0]?.message || "Password reset failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -178,7 +180,7 @@ export default function PasswordResetPage() {
 
             {resetStep === "code" && (
               <div className="text-center text-sm">
-                <span className="text-gray-600">Didn't receive the code? </span>
+                <span className="text-gray-600">Didn&apos;t receive the code? </span>
                 <button
                   onClick={() => handleSendResetCode({ preventDefault: () => {} } as React.FormEvent)}
                   className="text-blue-600 hover:underline"

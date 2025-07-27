@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Upload, Link } from "lucide-react";
+import { Upload, Link } from "lucide-react";
 
 export default function Hero() {
   return (

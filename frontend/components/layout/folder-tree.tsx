@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter, usePathname } from 'next/navigation';
 import { folderApi } from '@/lib/api';
+import { Folder as FolderType } from '@/types/folder';
 import { ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-react';
 import {
   SidebarGroup,
@@ -25,10 +26,11 @@ interface FolderNode {
 
 interface FolderTreeProps {
   title?: string;
-  onAddFolder?: (addFolderFn: (newFolder: any) => void) => void;
+  onAddFolder?: (addFolderFn: (newFolder: FolderType) => void) => void;
+  onRefreshFolder?: (refreshFn: () => void) => void;
 }
 
-export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) {
+export function FolderTree({ title = "Folders", onAddFolder, onRefreshFolder }: FolderTreeProps) {
   const { getToken } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -37,12 +39,8 @@ export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) 
   const [loading, setLoading] = useState(true);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    fetchFolderTree();
-  }, []);
-
   // Function to add a new folder to the tree without refetching
-  const addFolderToTree = useCallback((newFolder: any) => {
+  const addFolderToTree = useCallback((newFolder: FolderType) => {
     console.log('Adding folder to tree:', newFolder);
     
     setFolders(currentFolders => {
@@ -102,27 +100,7 @@ export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) 
     }
   }, [onAddFolder, addFolderToTree]);
 
-  const fetchFolderTree = async () => {
-    try {
-      const token = await getToken();
-      if (!token) return;
-
-      // Fetch all folders using centralized API
-      const data = await folderApi.getAllFolders(token);
-      console.log('All folders API response:', data); // Debug log
-      
-      // Build tree structure from flat folder list
-      const folderTree = buildFolderTree(data.folders || []);
-      console.log('Built folder tree:', folderTree); // Debug log
-      setFolders(folderTree);
-    } catch (error) {
-      console.error('Failed to fetch folder tree:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const buildFolderTree = (flatFolders: any[]): FolderNode[] => {
+  const buildFolderTree = useCallback((flatFolders: FolderType[]): FolderNode[] => {
     console.log('Building tree from flat folders:', flatFolders); // Debug log
     
     const folderMap = new Map<string, FolderNode>();
@@ -170,37 +148,64 @@ export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) 
 
     sortFolders(rootFolders);
     
-    // Auto-expand folders that contain the current path
-    autoExpandCurrentPath(rootFolders);
-    
-    return rootFolders;
-  };
-
-  const autoExpandCurrentPath = (folders: FolderNode[]) => {
+    // Auto-expand folders that contain the current path - inline implementation
     const currentFolderId = pathname.split('/').pop();
     if (currentFolderId && pathname.includes('/folder/')) {
-      expandToFolder(folders, currentFolderId);
-    }
-  };
-
-  const expandToFolder = (folders: FolderNode[], targetId: string): boolean => {
-    for (const folder of folders) {
-      if (folder.id === targetId) {
-        // Found target, expand all parents leading to it
-        setExpandedFolders(prev => new Set([...prev, folder.id]));
-        return true;
-      }
-      
-      if (folder.children && folder.children.length > 0) {
-        if (expandToFolder(folder.children, targetId)) {
-          // This folder contains the target, expand it
-          setExpandedFolders(prev => new Set([...prev, folder.id]));
-          return true;
+      const expandToFolder = (folders: FolderNode[], targetId: string): boolean => {
+        for (const folder of folders) {
+          if (folder.id === targetId) {
+            // Found target, expand all parents leading to it
+            setExpandedFolders(prev => new Set([...prev, folder.id]));
+            return true;
+          }
+          
+          if (folder.children && folder.children.length > 0) {
+            if (expandToFolder(folder.children, targetId)) {
+              // This folder contains the target, expand it
+              setExpandedFolders(prev => new Set([...prev, folder.id]));
+              return true;
+            }
+          }
         }
-      }
+        return false;
+      };
+      
+      expandToFolder(rootFolders, currentFolderId);
     }
-    return false;
-  };
+    
+    return rootFolders;
+  }, [pathname]);
+
+  const fetchFolderTree = useCallback(async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      // Fetch all folders using centralized API
+      const data = await folderApi.getAllFolders(token);
+      console.log('All folders API response:', data); // Debug log
+      
+      // Build tree structure from flat folder list
+      const folderTree = buildFolderTree(data.folders || []);
+      console.log('Built folder tree:', folderTree); // Debug log
+      setFolders(folderTree);
+    } catch (error) {
+      console.error('Failed to fetch folder tree:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [getToken, buildFolderTree]);
+
+  useEffect(() => {
+    fetchFolderTree();
+  }, [fetchFolderTree]);
+
+  // Expose refresh function to parent component
+  useEffect(() => {
+    if (onRefreshFolder) {
+      onRefreshFolder(fetchFolderTree);
+    }
+  }, [onRefreshFolder, fetchFolderTree]);
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolders(prev => {

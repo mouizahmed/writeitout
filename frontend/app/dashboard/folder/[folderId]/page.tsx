@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -23,7 +23,6 @@ import {
   MoreHorizontal,
   ChevronDown,
   FileAudio,
-  ChevronLeft,
   Home
 } from "lucide-react";
 import { FilesTable, type FileItem } from "@/components/files-table";
@@ -36,7 +35,6 @@ import Link from "next/link";
 export default function FolderPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
-  const params = useParams();
   const { currentFolderId } = useFolderContext();
   const { folder, breadcrumbs, files, loading, error, refetch } = useFolderData(currentFolderId);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
@@ -51,6 +49,7 @@ export default function FolderPage() {
   const handleFolderClick = useCallback((folderId: string) => {
     router.push(`/dashboard/folder/${folderId}`);
   }, [router]);
+
 
   // Redirect if not authenticated
   useEffect(() => {

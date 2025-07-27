@@ -53,7 +53,7 @@ export function DataTable<TData, TValue>({
       const selectedRows = table.getFilteredSelectedRowModel().rows.map(row => row.original);
       onRowSelectionChange(selectedRows);
     }
-  }, [rowSelection]);
+  }, [rowSelection, onRowSelectionChange, table]);
 
   return (
     <div className="w-full">

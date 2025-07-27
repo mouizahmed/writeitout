@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSignUp, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -74,8 +74,9 @@ export default function SignUpPage() {
 
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setVerifying(true);
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "Sign up failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ message: string }> };
+      setError(error.errors?.[0]?.message || "Sign up failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -99,8 +100,9 @@ export default function SignUpPage() {
       } else {
         setError("Verification failed. Please try again.");
       }
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "Verification failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ message: string }> };
+      setError(error.errors?.[0]?.message || "Verification failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -118,8 +120,9 @@ export default function SignUpPage() {
         redirectUrl: "/auth/callback",
         redirectUrlComplete: "/dashboard",
       });
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "Google sign up failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ message: string }> };
+      setError(error.errors?.[0]?.message || "Google sign up failed. Please try again.");
       setIsLoading(false);
     }
   };
@@ -175,7 +178,7 @@ export default function SignUpPage() {
               </form>
 
               <div className="text-center text-sm">
-                <span className="text-gray-600">Didn't receive the code? </span>
+                <span className="text-gray-600">Didn&apos;t receive the code? </span>
                 <button
                   onClick={() => signUp?.prepareEmailAddressVerification({ strategy: "email_code" })}
                   className="text-blue-600 hover:underline"
