@@ -17,13 +17,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FolderPlus } from "lucide-react";
+import { Folder } from "@/types/folder";
 
 interface FolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   parentFolderId?: string | null;
   parentFolderName?: string;
-  onFolderCreated?: (newFolder: any) => void; // Callback to update folder data
+  onFolderCreated?: (newFolder: Folder) => void; // Callback to update folder data
 }
 
 export function FolderDialog({ 

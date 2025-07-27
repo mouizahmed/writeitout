@@ -33,7 +33,10 @@ const getFileIcon = (type: string) => {
   }
 };
 
-const createColumns = (onFolderClick?: (folderId: string) => void): ColumnDef<FileItem>[] => [
+const createColumns = (
+  onFolderClick?: (folderId: string) => void,
+  onFolderRename?: (folderId: string, currentName: string) => void
+): ColumnDef<FileItem>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -172,6 +175,9 @@ const createColumns = (onFolderClick?: (folderId: string) => void): ColumnDef<Fi
   {
     id: "actions",
     cell: ({ row }) => {
+      const file = row.original;
+      const isFolder = file.type === "folder";
+      
       return (
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
@@ -187,10 +193,31 @@ const createColumns = (onFolderClick?: (folderId: string) => void): ColumnDef<Fi
             className="w-40" 
             avoidCollisions={true}
           >
-            <DropdownMenuItem>View details</DropdownMenuItem>
-            <DropdownMenuItem>Download</DropdownMenuItem>
-            <DropdownMenuItem>Share</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+            {isFolder ? (
+              // Folder actions
+              <>
+                <DropdownMenuItem 
+                  onClick={() => onFolderClick && onFolderClick(file.id)}
+                >
+                  Open
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onFolderRename && onFolderRename(file.id, file.name)}
+                >
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem>Move</DropdownMenuItem>
+                <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+              </>
+            ) : (
+              // File actions (other types will have different actions)
+              <>
+                <DropdownMenuItem>View details</DropdownMenuItem>
+                <DropdownMenuItem>Download</DropdownMenuItem>
+                <DropdownMenuItem>Share</DropdownMenuItem>
+                <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -202,10 +229,11 @@ interface FilesTableProps {
   data: FileItem[];
   onSelectionChange?: (selectedFiles: FileItem[]) => void;
   onFolderClick?: (folderId: string) => void;
+  onFolderRename?: (folderId: string, currentName: string) => void;
 }
 
-export function FilesTable({ data, onSelectionChange, onFolderClick }: FilesTableProps) {
-  const columns = createColumns(onFolderClick);
+export function FilesTable({ data, onSelectionChange, onFolderClick, onFolderRename }: FilesTableProps) {
+  const columns = createColumns(onFolderClick, onFolderRename);
   
   return (
     <div className="w-full min-w-[800px]">

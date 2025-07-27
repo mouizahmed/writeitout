@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FolderData, FolderDataResponse, FileItem } from '@/types/folder';
+import { FolderData, FolderDataResponse, FileItem, Folder } from '@/types/folder';
 import { useAuth } from '@clerk/nextjs';
 import { folderApi } from '@/lib/api';
 

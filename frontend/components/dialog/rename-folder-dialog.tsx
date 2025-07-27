@@ -16,13 +16,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Edit3 } from "lucide-react";
+import { Folder } from "@/types/folder";
 
 interface RenameFolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   folderId: string;
   currentName: string;
-  onFolderRenamed?: (updatedFolder: any) => void; // Callback to update folder data
+  onFolderRenamed?: (updatedFolder: Folder) => void; // Callback to update folder data
 }
 
 export function RenameFolderDialog({ 
