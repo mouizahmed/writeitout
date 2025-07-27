@@ -20,59 +20,64 @@ export function useFolderData(folderId: string | null): FolderData {
   });
 
   const updateFolder = useCallback((updatedFolder: Folder) => {
-    setData(prev => {
-      // Update current folder if it's the one being renamed
-      const updatedCurrentFolder = prev.folder?.id === updatedFolder.id ? updatedFolder : prev.folder;
-      
-      // Update breadcrumbs if any breadcrumb matches the updated folder
-      const updatedBreadcrumbs = prev.breadcrumbs.map(breadcrumb => 
-        breadcrumb.id === updatedFolder.id 
-          ? { ...breadcrumb, name: updatedFolder.name }
-          : breadcrumb
-      );
+    // Update cache first
+    updateFolderInCache(updatedFolder);
+    
+    // Refresh data from cache to trigger re-render
+    const cacheKey = folderId || 'root';
+    const cachedData = folderDataCache.get(cacheKey);
+    
+    if (cachedData) {
+      const combinedFiles = [
+        ...cachedData.contents.folders.map(folder => ({
+          ...folder,
+          type: 'folder' as const,
+        })),
+        ...cachedData.contents.files.map(file => ({
+          ...file,
+        }))
+      ];
 
-      return {
+      setData(prev => ({
         ...prev,
-        folder: updatedCurrentFolder,
-        breadcrumbs: updatedBreadcrumbs,
-      };
-    });
-  }, []);
+        folder: cachedData.folder,
+        breadcrumbs: cachedData.breadcrumbs,
+        files: combinedFiles,
+      }));
+    }
+  }, [folderId]);
 
   const addFolder = useCallback((newFolder: Folder) => {
-    setData(prev => {
-      // Add the new folder to the files list (only if it belongs to the current folder)
-      // Check if the new folder belongs to the current folder or is a root folder (when we're on dashboard)
-      const shouldAddToCurrentView = (
-        (!folderId && !newFolder.parent_id) || // Root folder when on dashboard
-        (folderId && newFolder.parent_id === folderId) // Child folder when in a specific folder
-      );
+    // Add to cache first
+    addFolderToCache(newFolder.parent_id, newFolder);
+    
+    // Refresh data from cache to trigger re-render (only if belongs to current view)
+    const shouldUpdateCurrentView = (
+      (!folderId && !newFolder.parent_id) || // Root folder when on dashboard
+      (folderId && newFolder.parent_id === folderId) // Child folder when in a specific folder
+    );
 
-      if (!shouldAddToCurrentView) {
-        return prev; // Don't add folder if it doesn't belong to current view
+    if (shouldUpdateCurrentView) {
+      const cacheKey = folderId || 'root';
+      const cachedData = folderDataCache.get(cacheKey);
+      
+      if (cachedData) {
+        const combinedFiles = [
+          ...cachedData.contents.folders.map(folder => ({
+            ...folder,
+            type: 'folder' as const,
+          })),
+          ...cachedData.contents.files.map(file => ({
+            ...file,
+          }))
+        ];
+
+        setData(prev => ({
+          ...prev,
+          files: combinedFiles,
+        }));
       }
-
-      // Create new folder item for the table display
-      const newFolderItem: FileItem = {
-        id: newFolder.id,
-        name: newFolder.name,
-        type: 'folder' as const,
-        created_at: newFolder.created_at,
-      };
-
-      // Add to files list and sort
-      const updatedFiles = [...prev.files, newFolderItem].sort((a, b) => {
-        // Sort folders first, then by name
-        if (a.type === 'folder' && b.type !== 'folder') return -1;
-        if (a.type !== 'folder' && b.type === 'folder') return 1;
-        return a.name.localeCompare(b.name);
-      });
-
-      return {
-        ...prev,
-        files: updatedFiles,
-      };
-    });
+    }
   }, [folderId]);
 
   const fetchFolderData = useCallback(async () => {
@@ -178,7 +183,7 @@ export function updateFolderCache(folderId: string | null, data: FolderDataRespo
 }
 
 // Helper function to add a new folder to existing cache
-export function addFolderToCache(parentFolderId: string | null, newFolder: any) {
+export function addFolderToCache(parentFolderId: string | null, newFolder: Folder) {
   const cacheKey = parentFolderId || 'root';
   const existingData = folderDataCache.get(cacheKey);
   
@@ -199,4 +204,84 @@ export function addFolderToCache(parentFolderId: string | null, newFolder: any) 
     return true;
   }
   return false;
+}
+
+// Helper function to update a folder in existing cache
+export function updateFolderInCache(updatedFolder: Folder) {
+  // Update all cache entries that might contain this folder
+  for (const [cacheKey, cacheData] of folderDataCache.entries()) {
+    let hasUpdates = false;
+    
+    // Update if this is the current folder
+    if (cacheData.folder?.id === updatedFolder.id) {
+      cacheData.folder = updatedFolder;
+      hasUpdates = true;
+    }
+    
+    // Update if folder exists in the folders list
+    const folderIndex = cacheData.contents.folders.findIndex(f => f.id === updatedFolder.id);
+    if (folderIndex !== -1) {
+      cacheData.contents.folders[folderIndex] = updatedFolder;
+      hasUpdates = true;
+    }
+    
+    // Update breadcrumbs
+    const originalBreadcrumbs = JSON.stringify(cacheData.breadcrumbs);
+    cacheData.breadcrumbs = cacheData.breadcrumbs.map(breadcrumb => 
+      breadcrumb.id === updatedFolder.id 
+        ? { ...breadcrumb, name: updatedFolder.name }
+        : breadcrumb
+    );
+    if (JSON.stringify(cacheData.breadcrumbs) !== originalBreadcrumbs) {
+      hasUpdates = true;
+    }
+    
+    if (hasUpdates) {
+      folderDataCache.set(cacheKey, cacheData);
+    }
+  }
+}
+
+// Helper function to remove a folder from existing cache
+export function removeFolderFromCache(folderId: string, parentFolderId: string | null) {
+  // Remove the folder from its parent's cache
+  const parentCacheKey = parentFolderId || 'root';
+  const parentData = folderDataCache.get(parentCacheKey);
+  
+  if (parentData) {
+    const updatedData = {
+      ...parentData,
+      contents: {
+        ...parentData.contents,
+        folders: parentData.contents.folders.filter(f => f.id !== folderId)
+      },
+      stats: {
+        ...parentData.stats,
+        total_folders: parentData.stats.total_folders - 1
+      }
+    };
+    folderDataCache.set(parentCacheKey, updatedData);
+  }
+  
+  // Remove the folder's own cache entry
+  folderDataCache.delete(folderId);
+  
+  // Remove from any other cache entries where it might appear in breadcrumbs
+  for (const [cacheKey, cacheData] of folderDataCache.entries()) {
+    const originalBreadcrumbs = JSON.stringify(cacheData.breadcrumbs);
+    cacheData.breadcrumbs = cacheData.breadcrumbs.filter(breadcrumb => breadcrumb.id !== folderId);
+    
+    if (JSON.stringify(cacheData.breadcrumbs) !== originalBreadcrumbs) {
+      folderDataCache.set(cacheKey, cacheData);
+    }
+  }
+}
+
+// Helper function to move a folder in cache
+export function moveFolderInCache(movedFolder: Folder, oldParentId: string | null, newParentId: string | null) {
+  // Remove from old parent
+  removeFolderFromCache(movedFolder.id, oldParentId);
+  
+  // Add to new parent
+  addFolderToCache(newParentId, movedFolder);
 }

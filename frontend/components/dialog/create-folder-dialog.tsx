@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { addFolderToCache } from "@/hooks/use-folder-data";
 import { useFolderTree } from "@/contexts/folder-tree-context";
 import { folderApi, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -70,22 +69,19 @@ export function FolderDialog({
       });
       console.log("Folder created successfully:", createdFolder);
       
-      // Optimistically update the cache with the new folder
-      addFolderToCache(parentFolderId, createdFolder);
-      
       // Add the new folder to the sidebar tree
       if (addFolderToTree.current) {
         addFolderToTree.current(createdFolder);
       }
       
-      // Reset form and close dialog
-      setFolderName("");
-      onOpenChange(false);
-      
-      // Update folder data instantly
+      // Update folder data instantly (this now handles cache internally)
       if (onFolderCreated) {
         onFolderCreated(createdFolder);
       }
+      
+      // Reset form and close dialog
+      setFolderName("");
+      onOpenChange(false);
     } catch (error) {
       console.error("Failed to create folder:", error);
       if (error instanceof ApiError) {

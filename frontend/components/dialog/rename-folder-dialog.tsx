@@ -86,14 +86,14 @@ export function RenameFolderDialog({
         updateFolderInTree.current(updatedFolder);
       }
       
-      // Reset form and close dialog
-      setFolderName("");
-      onOpenChange(false);
-      
-      // Update folder data (for breadcrumbs and current folder data)
+      // Update folder data (this now handles cache internally)
       if (onFolderRenamed) {
         onFolderRenamed(updatedFolder);
       }
+      
+      // Reset form and close dialog
+      setFolderName("");
+      onOpenChange(false);
     } catch (error) {
       console.error("Failed to rename folder:", error);
       if (error instanceof ApiError) {
