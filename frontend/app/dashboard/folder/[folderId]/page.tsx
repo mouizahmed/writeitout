@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { FilesTable, type FileItem } from "@/components/files-table";
 import { FolderDialog } from "@/components/folder-dialog";
+import { RenameFolderDialog } from "@/components/rename-folder-dialog";
 import { useFolderContext } from "@/hooks/use-folder-context";
 import { useFolderData } from "@/hooks/use-folder-data";
 import Link from "next/link";
@@ -41,6 +42,7 @@ export default function FolderPage() {
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [isRenameFolderOpen, setIsRenameFolderOpen] = useState(false);
 
   const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
     setSelectedFiles(selectedFiles.map(file => file.id));
@@ -99,8 +101,7 @@ export default function FolderPage() {
         {/* Header */}
         <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex h-14 items-center gap-2 px-4 sm:px-6">
-            <SidebarTrigger className="shrink-0" />
-            
+            <SidebarTrigger className="shrink-0 md:hidden" />
             <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
               {/* Breadcrumb Navigation */}
               <div className="flex items-center gap-2 min-w-0">
@@ -108,7 +109,13 @@ export default function FolderPage() {
                   <React.Fragment key={breadcrumb.href}>
                     {index > 0 && <span className="text-muted-foreground">/</span>}
                     {index === breadcrumbs.length - 1 ? (
-                      <span className="text-sm font-medium truncate">{breadcrumb.name}</span>
+                      <button 
+                        onClick={() => setIsRenameFolderOpen(true)}
+                        className="text-sm font-medium truncate hover:underline cursor-pointer"
+                        disabled={!folder}
+                      >
+                        {breadcrumb.name}
+                      </button>
                     ) : (
                       <Link 
                         href={breadcrumb.href} 
@@ -288,6 +295,17 @@ export default function FolderPage() {
           parentFolderName={folder?.name || "Unknown Folder"}
           onFolderCreated={refetch}
         />
+        
+        {/* Folder Rename Dialog */}
+        {folder && (
+          <RenameFolderDialog 
+            open={isRenameFolderOpen}
+            onOpenChange={setIsRenameFolderOpen}
+            folderId={folder.id}
+            currentName={folder.name}
+            onFolderRenamed={refetch}
+          />
+        )}
       </div>
   );
 }

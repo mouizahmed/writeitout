@@ -30,11 +30,9 @@ export function useFolderData(folderId: string | null): FolderData {
           ...cachedData.contents.folders.map(folder => ({
             ...folder,
             type: 'folder' as const,
-            created: folder.created_at,
           })),
           ...cachedData.contents.files.map(file => ({
             ...file,
-            created: file.created_at,
           }))
         ];
 
@@ -69,12 +67,10 @@ export function useFolderData(folderId: string | null): FolderData {
           id: folder.id,
           name: folder.name,
           type: 'folder' as const,
-          created: folder.created_at,
           created_at: folder.created_at,
         })),
         ...result.contents.files.map(file => ({
           ...file,
-          created: file.created_at,
         }))
       ];
 

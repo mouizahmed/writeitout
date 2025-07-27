@@ -12,23 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTable } from "@/components/data-table";
+import { FileItem } from "@/types/folder";
 import { 
   FileVideo,
   FileAudio,
   FileText,
   Folder,
 } from "lucide-react";
-
-export type FileItem = {
-  id: string;
-  name: string;
-  type: "video" | "audio" | "folder" | "text";
-  length?: string;
-  language?: string;
-  service?: string;
-  tags?: string[];
-  created: string;
-};
 
 const getFileIcon = (type: string) => {
   switch (type) {
@@ -145,7 +135,7 @@ const createColumns = (onFolderClick?: (folderId: string) => void): ColumnDef<Fi
     },
   },
   {
-    accessorKey: "created",
+    accessorKey: "created_at",
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -157,8 +147,8 @@ const createColumns = (onFolderClick?: (folderId: string) => void): ColumnDef<Fi
       </Button>
     ),
     cell: ({ row }) => {
-      const created = row.getValue("created") as string;
-      return <span className="text-muted-foreground">{created}</span>;
+      const created_at = row.getValue("created_at") as string;
+      return <span className="text-muted-foreground">{new Date(created_at).toLocaleDateString()}</span>;
     },
   },
   {
@@ -209,3 +199,5 @@ export function FilesTable({ data, onSelectionChange, onFolderClick }: FilesTabl
     </div>
   );
 }
+
+export type { FileItem };

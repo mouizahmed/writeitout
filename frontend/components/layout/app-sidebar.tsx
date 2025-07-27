@@ -20,22 +20,6 @@ import { useState, useEffect } from 'react'
 import { useFolderTree } from '@/contexts/folder-tree-context'
 
 function SidebarHeaderContent() {
-  const { state } = useSidebar()
-    
-  if (state === 'collapsed') {
-    return (
-      <div className="flex items-center justify-center">
-        <Image 
-          src="/logo2.svg" 
-          alt="WriteItOut Logo" 
-          width={50}
-          height={50}
-          className="w-12 h-12 border border-gray-200 rounded-xl bg-white"
-        />
-      </div>
-    )
-  }
-  
   return (
     <div className="flex items-center gap-3 px-4 py-3 border-b border-sidebar-border">
       <Image 
@@ -57,12 +41,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, loading, error } = useUser()
   const { addFolderToTree } = useFolderTree()
 
-  // Create user object with database data or fallback to sidebar data
+  // Create user object with database data
   const userData = user ? {
     name: user.name || 'Unknown User',
     email: user.email || 'No email',
-    avatar: user.avatar_url || sidebarData.user.avatar,
-  } : sidebarData.user
+    avatar: user.avatar_url || '/avatars/default-user.jpg',
+  } : {
+    name: 'Loading...',
+    email: 'Loading...',
+    avatar: '/avatars/default-user.jpg'
+  }
 
   // Helper functions for plan and quota display
   const getPlanIcon = (plan: string) => {
@@ -94,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar collapsible='icon' variant='floating' {...props}>
+    <Sidebar collapsible='none' variant='floating' {...props}>
       <SidebarHeader className="bg-amber-50/20">
         <SidebarHeaderContent />
       </SidebarHeader>

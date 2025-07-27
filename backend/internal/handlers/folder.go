@@ -178,3 +178,93 @@ func (h *FolderHandler) CreateFolder(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, folder)
 }
+
+type UpdateFolderRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+// UpdateFolder handles folder updates (rename)
+func (h *FolderHandler) UpdateFolder(c *gin.Context) {
+	// Get user ID from authentication middleware
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Authentication required",
+			"message": "User authentication context not found. Please sign in again.",
+		})
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Server error",
+			"message": "Internal authentication error. Please try again or contact support.",
+		})
+		return
+	}
+
+	// Get folder ID from URL parameter
+	folderID := c.Param("id")
+	if folderID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request",
+			"message": "Folder ID is required.",
+		})
+		return
+	}
+
+	// Parse request body
+	var req UpdateFolderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request data",
+			"message": "Request body is missing required fields or has invalid format. Please check that 'name' is provided.",
+		})
+		return
+	}
+
+	// Validate folder name
+	if len(req.Name) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Validation failed",
+			"message": "Folder name cannot be empty.",
+		})
+		return
+	}
+	
+	if len(req.Name) > 255 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Validation failed",
+			"message": "Folder name must be less than 255 characters.",
+		})
+		return
+	}
+
+	// Update folder
+	folder, err := h.folderRepo.UpdateFolder(folderID, req.Name, userIDStr)
+	if err != nil {
+		// Check for specific database errors
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "already exists") {
+			c.JSON(http.StatusConflict, gin.H{
+				"error":   "Folder already exists",
+				"message": "A folder with this name already exists in this location.",
+			})
+			return
+		}
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   "Folder not found",
+				"message": "The specified folder does not exist or you don't have access to it.",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Database error",
+			"message": "Unable to update folder. Please try again later.",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, folder)
+}

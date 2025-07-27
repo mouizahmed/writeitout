@@ -76,6 +76,7 @@ func main() {
 			authenticated.GET("/folders/all", folderHandler.GetAllFolders) // New endpoint for folder tree
 			authenticated.GET("/folders/:id", folderHandler.GetFolderData)
 			authenticated.POST("/folders", folderHandler.CreateFolder)
+			authenticated.PUT("/folders/:id", folderHandler.UpdateFolder) // New endpoint for updating folders
 		}
 	}
 

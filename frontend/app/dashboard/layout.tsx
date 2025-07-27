@@ -1,6 +1,6 @@
 "use client";
 
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { FolderTreeProvider } from "@/contexts/folder-tree-context";
 
@@ -11,11 +11,11 @@ export default function DashboardLayout({
 }) {
   return (
     <FolderTreeProvider>
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={true}>
         <AppSidebar />
-        <main className="flex-1 w-full">
+        <SidebarInset>
           {children}
-        </main>
+        </SidebarInset>
       </SidebarProvider>
     </FolderTreeProvider>
   );

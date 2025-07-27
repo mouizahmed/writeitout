@@ -98,8 +98,7 @@ export default function Dashboard() {
           {/* Header */}
           <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex h-14 items-center gap-2 px-4 sm:px-6">
-              <SidebarTrigger className="shrink-0" />
-              
+              <SidebarTrigger className="shrink-0 md:hidden" />
               <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
                 <div className="flex-1 min-w-0 max-w-sm">
                   <div className="relative">

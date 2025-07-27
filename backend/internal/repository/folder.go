@@ -245,6 +245,47 @@ func (r *FolderRepository) GetAllUserFolders(userID string) ([]models.Folder, er
 	return folders, nil
 }
 
+// UpdateFolder updates a folder's name
+func (r *FolderRepository) UpdateFolder(folderID, name, userID string) (*models.Folder, error) {
+	// First check if the folder exists and belongs to the user
+	existingFolder, err := r.GetFolderByID(folderID, userID)
+	if err != nil {
+		return nil, err
+	}
+	if existingFolder == nil {
+		return nil, fmt.Errorf("folder not found")
+	}
+
+	query := `
+		UPDATE folders 
+		SET name = $1, updated_at = NOW()
+		WHERE id = $2 AND user_id = $3 AND deleted_at IS NULL
+		RETURNING id, name, parent_id, user_id, created_at, updated_at
+	`
+	
+	var folder models.Folder
+	err = r.db.QueryRow(query, name, folderID, userID).Scan(
+		&folder.ID,
+		&folder.Name,
+		&folder.ParentID,
+		&folder.UserID,
+		&folder.CreatedAt,
+		&folder.UpdatedAt,
+	)
+	
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return nil, fmt.Errorf("folder already exists: a folder with this name already exists in this location")
+		}
+		if strings.Contains(err.Error(), "connection") {
+			return nil, fmt.Errorf("database connection error: unable to connect to database")
+		}
+		return nil, fmt.Errorf("database error: failed to update folder")
+	}
+	
+	return &folder, nil
+}
+
 // CreateFolder creates a new folder
 func (r *FolderRepository) CreateFolder(name string, parentID *string, userID string) (*models.Folder, error) {
 	query := `
