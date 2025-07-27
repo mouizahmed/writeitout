@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, ChevronDown, ArrowUpDown, Filter } from "lucide-react";
+import { MoreHorizontal, ChevronDown, ChevronUp, ChevronsUpDown, Filter } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataTable } from "@/components/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { FileItem } from "@/types/folder";
 import { 
   FileVideo,
@@ -86,16 +86,25 @@ const createColumns = (onFolderClick?: (folderId: string) => void): ColumnDef<Fi
   },
   {
     accessorKey: "length",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "desc")}
-        className="h-auto p-0 font-medium"
-      >
-        Length
-        <ChevronDown className="ml-1 h-3 w-3" />
-      </Button>
-    ),
+    header: ({ column }) => {
+      const sorted = column.getIsSorted();
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(sorted === "asc")}
+          className="h-auto p-0 font-medium"
+        >
+          Length
+          {sorted === "desc" ? (
+            <ChevronDown className="ml-1 h-3 w-3" />
+          ) : sorted === "asc" ? (
+            <ChevronUp className="ml-1 h-3 w-3" />
+          ) : (
+            <ChevronsUpDown className="ml-1 h-3 w-3" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const length = row.getValue("length") as string;
       return length ? <span className="text-muted-foreground">{length}</span> : null;
@@ -136,16 +145,25 @@ const createColumns = (onFolderClick?: (folderId: string) => void): ColumnDef<Fi
   },
   {
     accessorKey: "created_at",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "desc")}
-        className="h-auto p-0 font-medium"
-      >
-        Created
-        <ChevronDown className="ml-1 h-3 w-3" />
-      </Button>
-    ),
+    header: ({ column }) => {
+      const sorted = column.getIsSorted();
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(sorted === "asc")}
+          className="h-auto p-0 font-medium"
+        >
+          Created
+          {sorted === "desc" ? (
+            <ChevronDown className="ml-1 h-3 w-3" />
+          ) : sorted === "asc" ? (
+            <ChevronUp className="ml-1 h-3 w-3" />
+          ) : (
+            <ChevronsUpDown className="ml-1 h-3 w-3" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const created_at = row.getValue("created_at") as string;
       return <span className="text-muted-foreground">{new Date(created_at).toLocaleDateString()}</span>;

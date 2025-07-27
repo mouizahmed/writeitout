@@ -27,8 +27,8 @@ import {
   Home
 } from "lucide-react";
 import { FilesTable, type FileItem } from "@/components/files-table";
-import { FolderDialog } from "@/components/folder-dialog";
-import { RenameFolderDialog } from "@/components/rename-folder-dialog";
+import { FolderDialog } from "@/components/dialog/create-folder-dialog";
+import { RenameFolderDialog } from "@/components/dialog/rename-folder-dialog";
 import { useFolderContext } from "@/hooks/use-folder-context";
 import { useFolderData } from "@/hooks/use-folder-data";
 import Link from "next/link";

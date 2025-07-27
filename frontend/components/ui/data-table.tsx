@@ -11,7 +11,6 @@ import {
   getFilteredRowModel,
   ColumnFiltersState,
   VisibilityState,
-  Row,
 } from "@tanstack/react-table";
 
 

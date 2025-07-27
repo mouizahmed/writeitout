@@ -230,7 +230,7 @@ export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) 
 
     return (
       <SidebarMenuItem key={folder.id}>
-        <div className="flex items-center w-full">
+        <div className="flex items-center w-max min-w-full">
           {/* Chevron button - separate from the main button */}
           {hasChildren ? (
             <button
@@ -258,14 +258,14 @@ export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) 
             tooltip={folder.name}
             className="hover:bg-amber-100/30 data-[active=true]:bg-amber-200/30 flex-1"
           >
-            <div className="flex items-center gap-1 min-w-0 flex-1">
+            <div className="flex items-center gap-1 flex-1 whitespace-nowrap">
               {isExpanded && hasChildren ? (
                 <FolderOpen className="w-4 h-4 flex-shrink-0" />
               ) : (
                 <Folder className="w-4 h-4 flex-shrink-0" />
               )}
               
-              <span className="truncate text-sm">{folder.name}</span>
+              <span className="text-sm">{folder.name}</span>
             </div>
           </SidebarMenuButton>
         </div>
@@ -299,26 +299,34 @@ export function FolderTree({ title = "Folders", onAddFolder }: FolderTreeProps) 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
-      <SidebarMenu>
-        {/* Dashboard/Root level */}
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            onClick={() => {
-              router.push('/dashboard');
-              setOpenMobile(false);
-            }}
-            isActive={pathname === '/dashboard'}
-            tooltip="Dashboard"
-            className="hover:bg-amber-100/30 data-[active=true]:bg-amber-200/30"
-          >
-            <FolderOpen className="w-4 h-4" />
-            <span className="text-sm">Dashboard</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+      <div className="flex flex-col min-h-0 max-h-[60vh]">
+        <SidebarMenu>
+          {/* Dashboard/Root level */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => {
+                router.push('/dashboard');
+                setOpenMobile(false);
+              }}
+              isActive={pathname === '/dashboard'}
+              tooltip="Dashboard"
+              className="hover:bg-amber-100/30 data-[active=true]:bg-amber-200/30"
+            >
+              <FolderOpen className="w-4 h-4" />
+              <span className="text-sm">Dashboard</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
 
-        {/* Folder tree */}
-        {folders.map(folder => renderFolderNode(folder))}
-      </SidebarMenu>
+        {/* Scrollable folder tree container */}
+        <div className="overflow-y-auto overflow-x-auto flex-1 min-h-0 pr-1">
+          <div className="min-w-max">
+            <SidebarMenu>
+              {folders.map(folder => renderFolderNode(folder))}
+            </SidebarMenu>
+          </div>
+        </div>
+      </div>
     </SidebarGroup>
   );
 }
