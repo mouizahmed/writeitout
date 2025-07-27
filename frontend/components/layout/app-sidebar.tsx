@@ -14,7 +14,6 @@ import { useUser } from '@/hooks/use-user'
 import { Badge } from '@/components/ui/badge'
 import { Crown, Zap } from 'lucide-react'
 import Image from 'next/image'
-import { useFolderTree } from '@/contexts/folder-tree-context'
 
 function SidebarHeaderContent() {
   return (
@@ -36,7 +35,6 @@ function SidebarHeaderContent() {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, loading, error } = useUser()
-  const { addFolderToTree, updateFolderInTree } = useFolderTree()
 
   // Create user object with database data
   const userData = user ? {
@@ -85,10 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent className="bg-amber-50/15">
         {/* Folder Tree */}
-        <FolderTree 
-          onAddFolder={(fn) => { addFolderToTree.current = fn; }} 
-          onUpdateFolder={(fn) => { updateFolderInTree.current = fn; }}
-        />
+        <FolderTree />
         
         {sidebarData.navGroups.map((props) => (
           <NavGroup key={props.title} {...props} />

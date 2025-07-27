@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter, usePathname } from 'next/navigation';
 import { folderApi } from '@/lib/api';
+import { getFolderTreeCache, setFolderTreeCache, subscribeFolderTreeUpdates } from '@/hooks/use-folder-data';
 import { Folder as FolderType } from '@/types/folder';
 import { ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-react';
 import {
@@ -26,11 +27,9 @@ interface FolderNode {
 
 interface FolderTreeProps {
   title?: string;
-  onAddFolder?: (addFolderFn: (newFolder: FolderType) => void) => void;
-  onUpdateFolder?: (updateFolderFn: (updatedFolder: FolderType) => void) => void;
 }
 
-export function FolderTree({ title = "Folders", onAddFolder, onUpdateFolder }: FolderTreeProps) {
+export function FolderTree({ title = "Folders" }: FolderTreeProps) {
   const { getToken } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -40,107 +39,7 @@ export function FolderTree({ title = "Folders", onAddFolder, onUpdateFolder }: F
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   // Function to add a new folder to the tree without refetching
-  const addFolderToTree = useCallback((newFolder: FolderType) => {
-    console.log('Adding folder to tree:', newFolder);
-    
-    setFolders(currentFolders => {
-      // Create the new folder node
-      const newFolderNode: FolderNode = {
-        id: newFolder.id,
-        name: newFolder.name,
-        parent_id: newFolder.parent_id,
-        children: [],
-        expanded: false,
-      };
-
-      // If it's a root folder (no parent)
-      if (!newFolder.parent_id) {
-        const updatedRootFolders = [...currentFolders, newFolderNode];
-        updatedRootFolders.sort((a, b) => a.name.localeCompare(b.name));
-        return updatedRootFolders;
-      }
-
-      // Find the parent folder and add the new folder to its children
-      const addToParent = (folders: FolderNode[]): FolderNode[] => {
-        return folders.map(folder => {
-          if (folder.id === newFolder.parent_id) {
-            // Found the parent, add the new folder to its children
-            const updatedChildren = [...(folder.children || []), newFolderNode];
-            updatedChildren.sort((a, b) => a.name.localeCompare(b.name));
-            
-            // Auto-expand the parent to show the new folder
-            setExpandedFolders(prev => new Set([...prev, folder.id]));
-            
-            return {
-              ...folder,
-              children: updatedChildren,
-            };
-          }
-          
-          // Recursively check children
-          if (folder.children && folder.children.length > 0) {
-            return {
-              ...folder,
-              children: addToParent(folder.children),
-            };
-          }
-          
-          return folder;
-        });
-      };
-
-      return addToParent(currentFolders);
-    });
-  }, []);
-
-  // Function to update a folder in the tree without refetching
-  const updateFolderInTree = useCallback((updatedFolder: FolderType) => {
-    console.log('Updating folder in tree:', updatedFolder);
-    
-    setFolders(currentFolders => {
-      const updateFolderNode = (folders: FolderNode[]): FolderNode[] => {
-        return folders.map(folder => {
-          if (folder.id === updatedFolder.id) {
-            // Found the folder to update
-            return {
-              ...folder,
-              name: updatedFolder.name,
-              parent_id: updatedFolder.parent_id,
-            };
-          }
-          
-          // Recursively check children
-          if (folder.children && folder.children.length > 0) {
-            return {
-              ...folder,
-              children: updateFolderNode(folder.children),
-            };
-          }
-          
-          return folder;
-        });
-      };
-
-      return updateFolderNode(currentFolders);
-    });
-  }, []);
-
-  // Expose add folder function to parent component
-  useEffect(() => {
-    if (onAddFolder) {
-      onAddFolder(addFolderToTree);
-    }
-  }, [onAddFolder, addFolderToTree]);
-
-  // Expose update folder function to parent component
-  useEffect(() => {
-    if (onUpdateFolder) {
-      onUpdateFolder(updateFolderInTree);
-    }
-  }, [onUpdateFolder, updateFolderInTree]);
-
   const buildFolderTree = useCallback((flatFolders: FolderType[]): FolderNode[] => {
-    console.log('Building tree from flat folders:', flatFolders); // Debug log
     
     const folderMap = new Map<string, FolderNode>();
     const rootFolders: FolderNode[] = [];
@@ -215,18 +114,41 @@ export function FolderTree({ title = "Folders", onAddFolder, onUpdateFolder }: F
     return rootFolders;
   }, [pathname]);
 
+  // Subscribe to cache changes and rebuild tree when cache updates
+  useEffect(() => {
+    const unsubscribe = subscribeFolderTreeUpdates(() => {
+      const cachedFolders = getFolderTreeCache();
+      if (cachedFolders) {
+        const folderTree = buildFolderTree(cachedFolders);
+        setFolders(folderTree);
+      }
+    });
+
+    return unsubscribe;
+  }, [buildFolderTree]);
+
   const fetchFolderTree = useCallback(async () => {
     try {
       const token = await getToken();
       if (!token) return;
 
+      // Check cache first
+      const cachedFolders = getFolderTreeCache();
+      if (cachedFolders) {
+        const folderTree = buildFolderTree(cachedFolders);
+        setFolders(folderTree);
+        setLoading(false);
+        return;
+      }
+
       // Fetch all folders using centralized API
       const data = await folderApi.getAllFolders(token);
-      console.log('All folders API response:', data); // Debug log
+      
+      // Cache the response
+      setFolderTreeCache(data.folders || []);
       
       // Build tree structure from flat folder list
       const folderTree = buildFolderTree(data.folders || []);
-      console.log('Built folder tree:', folderTree); // Debug log
       setFolders(folderTree);
     } catch (error) {
       console.error('Failed to fetch folder tree:', error);

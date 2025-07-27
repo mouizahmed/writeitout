@@ -6,6 +6,10 @@ import { folderApi } from '@/lib/api';
 // Cache for folder data to avoid unnecessary refetches
 const folderDataCache = new Map<string, FolderDataResponse>();
 
+// Cache for folder tree data
+let folderTreeCache: Folder[] | null = null;
+let folderTreeUpdateListeners: (() => void)[] = [];
+
 export function useFolderData(folderId: string | null): FolderData {
   const { getToken } = useAuth();
   const [data, setData] = useState<FolderData>({
@@ -121,7 +125,6 @@ export function useFolderData(folderId: string | null): FolderData {
       // Fetch from centralized API
       const result: FolderDataResponse = await folderApi.getFolderData(token, folderId || undefined);
 
-      console.log("Response:", result)
       
       // Cache the result
       folderDataCache.set(cacheKey, result);
@@ -167,20 +170,6 @@ export function useFolderData(folderId: string | null): FolderData {
   return data;
 }
 
-// Helper function to clear cache when data changes
-export function clearFolderCache(folderId?: string | null) {
-  if (folderId) {
-    folderDataCache.delete(folderId);
-  } else {
-    folderDataCache.clear();
-  }
-}
-
-// Helper function to update cache after folder operations
-export function updateFolderCache(folderId: string | null, data: FolderDataResponse) {
-  const cacheKey = folderId || 'root';
-  folderDataCache.set(cacheKey, data);
-}
 
 // Helper function to add a new folder to existing cache
 export function addFolderToCache(parentFolderId: string | null, newFolder: Folder) {
@@ -201,14 +190,17 @@ export function addFolderToCache(parentFolderId: string | null, newFolder: Folde
       }
     };
     folderDataCache.set(cacheKey, updatedData);
-    return true;
   }
-  return false;
+  
+  // Update folder tree cache
+  addFolderToTreeCache(newFolder);
+  
+  return existingData ? true : false;
 }
 
 // Helper function to update a folder in existing cache
 export function updateFolderInCache(updatedFolder: Folder) {
-  // Update all cache entries that might contain this folder
+  // Update folder data cache
   for (const [cacheKey, cacheData] of folderDataCache.entries()) {
     let hasUpdates = false;
     
@@ -240,6 +232,9 @@ export function updateFolderInCache(updatedFolder: Folder) {
       folderDataCache.set(cacheKey, cacheData);
     }
   }
+  
+  // Update folder tree cache
+  updateFolderInTreeCache(updatedFolder);
 }
 
 // Helper function to remove a folder from existing cache
@@ -275,13 +270,60 @@ export function removeFolderFromCache(folderId: string, parentFolderId: string |
       folderDataCache.set(cacheKey, cacheData);
     }
   }
+  
+  // Update folder tree cache
+  removeFolderFromTreeCache(folderId);
 }
 
-// Helper function to move a folder in cache
-export function moveFolderInCache(movedFolder: Folder, oldParentId: string | null, newParentId: string | null) {
-  // Remove from old parent
-  removeFolderFromCache(movedFolder.id, oldParentId);
+
+// Folder tree cache management
+export function getFolderTreeCache(): Folder[] | null {
+  return folderTreeCache;
+}
+
+export function setFolderTreeCache(folders: Folder[]) {
+  folderTreeCache = folders;
+  // Notify all listeners that tree cache has changed
+  folderTreeUpdateListeners.forEach(listener => listener());
+}
+
+export function clearFolderTreeCache() {
+  folderTreeCache = null;
+}
+
+export function updateFolderInTreeCache(updatedFolder: Folder) {
+  if (folderTreeCache) {
+    const folderIndex = folderTreeCache.findIndex(f => f.id === updatedFolder.id);
+    if (folderIndex !== -1) {
+      folderTreeCache[folderIndex] = updatedFolder;
+      // Notify listeners of cache change
+      folderTreeUpdateListeners.forEach(listener => listener());
+    }
+  }
+}
+
+export function addFolderToTreeCache(newFolder: Folder) {
+  if (folderTreeCache) {
+    folderTreeCache.push(newFolder);
+    // Notify listeners of cache change
+    folderTreeUpdateListeners.forEach(listener => listener());
+  }
+}
+
+export function removeFolderFromTreeCache(folderId: string) {
+  if (folderTreeCache) {
+    folderTreeCache = folderTreeCache.filter(f => f.id !== folderId);
+    // Notify listeners of cache change
+    folderTreeUpdateListeners.forEach(listener => listener());
+  }
+}
+
+// Subscribe to folder tree cache changes
+export function subscribeFolderTreeUpdates(listener: () => void) {
+  folderTreeUpdateListeners.push(listener);
   
-  // Add to new parent
-  addFolderToCache(newParentId, movedFolder);
+  // Return unsubscribe function
+  return () => {
+    folderTreeUpdateListeners = folderTreeUpdateListeners.filter(l => l !== listener);
+  };
 }

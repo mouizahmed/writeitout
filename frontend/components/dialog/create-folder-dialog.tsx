@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { useFolderTree } from "@/contexts/folder-tree-context";
 import { folderApi, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +33,6 @@ export function FolderDialog({
   onFolderCreated
 }: FolderDialogProps) {
   const { getToken } = useAuth();
-  const { addFolderToTree } = useFolderTree();
   const [folderName, setFolderName] = useState("");
   const [folderError, setFolderError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -67,14 +65,8 @@ export function FolderDialog({
         name: folderName,
         parent_id: parentFolderId
       });
-      console.log("Folder created successfully:", createdFolder);
       
-      // Add the new folder to the sidebar tree
-      if (addFolderToTree.current) {
-        addFolderToTree.current(createdFolder);
-      }
-      
-      // Update folder data instantly (this now handles cache internally)
+      // Update folder data (this handles both cache and UI updates)
       if (onFolderCreated) {
         onFolderCreated(createdFolder);
       }
