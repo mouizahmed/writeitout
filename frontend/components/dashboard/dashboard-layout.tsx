@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ import {
   FileAudio,
   Home
 } from "lucide-react";
-import { FilesTable, type FileItem } from "@/components/files-table";
+import { FilesTable, FilesTableRef, type FileItem } from "@/components/files-table";
 import { FolderDialog } from "@/components/dialog/create-folder-dialog";
 import { RenameFolderDialog } from "@/components/dialog/rename-folder-dialog";
 import { DeleteFolderDialog } from "@/components/dialog/delete-folder-dialog";
@@ -58,18 +58,14 @@ export function DashboardLayout({
   const [selectedFolderForRename, setSelectedFolderForRename] = useState<{id: string, name: string} | null>(null);
   const [isDeleteFolderOpen, setIsDeleteFolderOpen] = useState(false);
   const [selectedFolderForDelete, setSelectedFolderForDelete] = useState<{id: string, name: string} | null>(null);
-  const [clearSelection, setClearSelection] = useState(false);
+  const filesTableRef = useRef<FilesTableRef>(null);
 
   const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
     setSelectedFiles(selectedFiles.map(file => file.id));
-    setClearSelection(false); // Reset clear flag when selection changes
   }, []);
 
   const handleClearSelection = useCallback(() => {
-    setSelectedFiles([]);
-    setClearSelection(true);
-    // Reset the flag after a brief moment to allow the effect to trigger
-    setTimeout(() => setClearSelection(false), 100);
+    filesTableRef.current?.clearSelection();
   }, []);
 
   const handleFolderClick = useCallback((folderId: string) => {
@@ -286,12 +282,12 @@ export function DashboardLayout({
           <div className="flex-1 overflow-x-auto" style={{ clipPath: 'none' }}>
             <div className="h-full p-4 pb-20 relative">
               <FilesTable 
+                ref={filesTableRef}
                 data={files} 
                 onSelectionChange={handleFileSelection}
                 onFolderClick={handleFolderClick}
                 onFolderRename={handleFolderRename}
                 onFolderDelete={handleFolderDelete}
-                clearSelection={clearSelection}
               />
             </div>
           </div>

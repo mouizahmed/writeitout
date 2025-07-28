@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableRef } from "@/components/ui/data-table";
 import { FileItem } from "@/types/folder";
 import { 
   FileVideo,
@@ -237,22 +237,36 @@ interface FilesTableProps {
   onFolderClick?: (folderId: string) => void;
   onFolderRename?: (folderId: string, currentName: string) => void;
   onFolderDelete?: (folderId: string, folderName: string) => void;
-  clearSelection?: boolean;
 }
 
-export function FilesTable({ data, onSelectionChange, onFolderClick, onFolderRename, onFolderDelete, clearSelection }: FilesTableProps) {
+export interface FilesTableRef {
+  clearSelection: () => void;
+}
+
+export const FilesTable = React.forwardRef<FilesTableRef, FilesTableProps>(function FilesTable({ 
+  data, 
+  onSelectionChange, 
+  onFolderClick, 
+  onFolderRename, 
+  onFolderDelete 
+}, ref) {
+  const dataTableRef = React.useRef<DataTableRef>(null);
   const columns = createColumns(onFolderClick, onFolderRename, onFolderDelete);
+  
+  React.useImperativeHandle(ref, () => ({
+    clearSelection: () => dataTableRef.current?.clearSelection()
+  }), []);
   
   return (
     <div className="w-full min-w-[800px]">
       <DataTable 
+        ref={dataTableRef}
         columns={columns} 
         data={data} 
         onRowSelectionChange={onSelectionChange}
-        clearSelection={clearSelection}
       />
     </div>
   );
-}
+});
 
 export type { FileItem };

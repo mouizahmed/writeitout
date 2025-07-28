@@ -13,20 +13,21 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 
+export interface DataTableRef {
+  clearSelection: () => void;
+}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onRowSelectionChange?: (selectedRows: TData[]) => void;
-  clearSelection?: boolean;
 }
 
-export function DataTable<TData, TValue>({
+export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any, any>>(function DataTable<TData, TValue>({
   columns,
   data,
   onRowSelectionChange,
-  clearSelection,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData, TValue>, ref: React.Ref<DataTableRef>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -57,11 +58,9 @@ export function DataTable<TData, TValue>({
     }
   }, [rowSelection, onRowSelectionChange, table]);
 
-  React.useEffect(() => {
-    if (clearSelection) {
-      setRowSelection({});
-    }
-  }, [clearSelection]);
+  React.useImperativeHandle(ref, () => ({
+    clearSelection: () => table.toggleAllPageRowsSelected(false)
+  }), [table]);
 
   return (
     <div className="w-full">
@@ -110,4 +109,4 @@ export function DataTable<TData, TValue>({
       </table>
     </div>
   );
-}
+});
