@@ -53,4 +53,5 @@ export interface FolderData {
   refetch: () => Promise<void>;
   updateFolder: (updatedFolder: Folder) => void;
   addFolder: (newFolder: Folder) => void;
+  deleteFolder: (folderId: string) => void;
 }

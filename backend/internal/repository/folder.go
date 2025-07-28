@@ -319,3 +319,40 @@ func (r *FolderRepository) CreateFolder(name string, parentID *string, userID st
 	
 	return &folder, nil
 }
+
+// DeleteFolder soft deletes a folder by setting deleted_at timestamp
+func (r *FolderRepository) DeleteFolder(folderID, userID string) error {
+	// First check if the folder exists and belongs to the user
+	existingFolder, err := r.GetFolderByID(folderID, userID)
+	if err != nil {
+		return err
+	}
+	if existingFolder == nil {
+		return fmt.Errorf("folder not found")
+	}
+
+	query := `
+		UPDATE folders 
+		SET deleted_at = NOW(), updated_at = NOW()
+		WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+	`
+	
+	result, err := r.db.Exec(query, folderID, userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "connection") {
+			return fmt.Errorf("database connection error: unable to connect to database")
+		}
+		return fmt.Errorf("database error: failed to delete folder")
+	}
+	
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("database error: failed to verify deletion")
+	}
+	
+	if rowsAffected == 0 {
+		return fmt.Errorf("folder not found or already deleted")
+	}
+	
+	return nil
+}

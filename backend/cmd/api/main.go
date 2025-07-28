@@ -77,6 +77,7 @@ func main() {
 			authenticated.GET("/folders/:id", folderHandler.GetFolderData)
 			authenticated.POST("/folders", folderHandler.CreateFolder)
 			authenticated.PATCH("/folders/:id", folderHandler.UpdateFolder)
+			authenticated.DELETE("/folders/:id", folderHandler.DeleteFolder)
 		}
 	}
 

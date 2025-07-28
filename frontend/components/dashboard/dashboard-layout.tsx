@@ -28,6 +28,7 @@ import {
 import { FilesTable, type FileItem } from "@/components/files-table";
 import { FolderDialog } from "@/components/dialog/create-folder-dialog";
 import { RenameFolderDialog } from "@/components/dialog/rename-folder-dialog";
+import { DeleteFolderDialog } from "@/components/dialog/delete-folder-dialog";
 import { useFolderData } from "@/hooks/use-folder-data";
 import Link from "next/link";
 
@@ -48,13 +49,15 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
-  const { folder, breadcrumbs, files, loading, error, refetch, updateFolder, addFolder } = useFolderData(currentFolderId ?? null);
+  const { folder, breadcrumbs, files, loading, error, refetch, updateFolder, addFolder, deleteFolder } = useFolderData(currentFolderId ?? null);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isRenameFolderOpen, setIsRenameFolderOpen] = useState(false);
   const [isRenameChildFolderOpen, setIsRenameChildFolderOpen] = useState(false);
   const [selectedFolderForRename, setSelectedFolderForRename] = useState<{id: string, name: string} | null>(null);
+  const [isDeleteFolderOpen, setIsDeleteFolderOpen] = useState(false);
+  const [selectedFolderForDelete, setSelectedFolderForDelete] = useState<{id: string, name: string} | null>(null);
 
   const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
     setSelectedFiles(selectedFiles.map(file => file.id));
@@ -72,6 +75,11 @@ export function DashboardLayout({
       setIsRenameFolderOpen(true);
     }
   }, [showBreadcrumbs]);
+
+  const handleFolderDelete = useCallback((folderId: string, folderName: string) => {
+    setSelectedFolderForDelete({ id: folderId, name: folderName });
+    setIsDeleteFolderOpen(true);
+  }, []);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -273,6 +281,7 @@ export function DashboardLayout({
                 onSelectionChange={handleFileSelection}
                 onFolderClick={handleFolderClick}
                 onFolderRename={handleFolderRename}
+                onFolderDelete={handleFolderDelete}
               />
             </div>
           </div>
@@ -339,6 +348,17 @@ export function DashboardLayout({
           folderId={selectedFolderForRename.id}
           currentName={selectedFolderForRename.name}
           onFolderRenamed={updateFolder}
+        />
+      )}
+
+      {/* Delete Folder Dialog */}
+      {selectedFolderForDelete && (
+        <DeleteFolderDialog 
+          open={isDeleteFolderOpen}
+          onOpenChange={setIsDeleteFolderOpen}
+          folderId={selectedFolderForDelete.id}
+          folderName={selectedFolderForDelete.name}
+          onFolderDeleted={deleteFolder}
         />
       )}
     </div>

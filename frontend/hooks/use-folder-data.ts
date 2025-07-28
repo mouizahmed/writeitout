@@ -21,6 +21,7 @@ export function useFolderData(folderId: string | null): FolderData {
     refetch: async () => {},
     updateFolder: () => {},
     addFolder: () => {},
+    deleteFolder: () => {},
   });
 
   const updateFolder = useCallback((updatedFolder: Folder) => {
@@ -84,6 +85,32 @@ export function useFolderData(folderId: string | null): FolderData {
     }
   }, [folderId]);
 
+  const deleteFolder = useCallback((deletedFolderId: string) => {
+    // Remove from cache first
+    removeFolderFromCache(deletedFolderId, folderId);
+    
+    // Refresh data from cache to trigger re-render
+    const cacheKey = folderId || 'root';
+    const cachedData = folderDataCache.get(cacheKey);
+    
+    if (cachedData) {
+      const combinedFiles = [
+        ...cachedData.contents.folders.map(folder => ({
+          ...folder,
+          type: 'folder' as const,
+        })),
+        ...cachedData.contents.files.map(file => ({
+          ...file,
+        }))
+      ];
+
+      setData(prev => ({
+        ...prev,
+        files: combinedFiles,
+      }));
+    }
+  }, [folderId]);
+
   const fetchFolderData = useCallback(async () => {
     try {
       setData(prev => ({ ...prev, loading: true, error: null }));
@@ -112,6 +139,7 @@ export function useFolderData(folderId: string | null): FolderData {
           refetch: fetchFolderData,
           updateFolder,
           addFolder,
+          deleteFolder,
         });
         return;
       }
@@ -151,6 +179,7 @@ export function useFolderData(folderId: string | null): FolderData {
         refetch: fetchFolderData,
         updateFolder,
         addFolder,
+        deleteFolder,
       });
     } catch (err) {
       console.error('Failed to fetch folder data:', err);
@@ -160,7 +189,7 @@ export function useFolderData(folderId: string | null): FolderData {
         error: err instanceof Error ? err.message : 'Failed to load folder data'
       }));
     }
-  }, [folderId, getToken, updateFolder, addFolder]);
+  }, [folderId, getToken, updateFolder, addFolder, deleteFolder]);
 
   // Refetch data when folderId changes
   useEffect(() => {

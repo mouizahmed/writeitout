@@ -268,3 +268,56 @@ func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 
 	c.JSON(http.StatusOK, folder)
 }
+
+// DeleteFolder handles folder deletion (soft delete)
+func (h *FolderHandler) DeleteFolder(c *gin.Context) {
+	// Get user ID from authentication middleware
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Authentication required",
+			"message": "User authentication context not found. Please sign in again.",
+		})
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Server error",
+			"message": "Internal authentication error. Please try again or contact support.",
+		})
+		return
+	}
+
+	// Get folder ID from URL parameter
+	folderID := c.Param("id")
+	if folderID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request",
+			"message": "Folder ID is required.",
+		})
+		return
+	}
+
+	// Delete folder
+	err := h.folderRepo.DeleteFolder(folderID, userIDStr)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   "Folder not found",
+				"message": "The specified folder does not exist or you don't have access to it.",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Database error",
+			"message": "Unable to delete folder. Please try again later.",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Folder deleted successfully",
+	})
+}
