@@ -39,7 +39,7 @@ export function useFolderData(folderId: string | null): FolderData {
         ...cachedData.contents.folders.map(folder => ({
           ...folder,
           type: 'folder' as const,
-          folder_id: folder.parent_id,
+          folder_id: folder.parent_id || undefined,
         })),
         ...cachedData.contents.files.map(file => ({
           ...file,
@@ -74,7 +74,7 @@ export function useFolderData(folderId: string | null): FolderData {
           ...cachedData.contents.folders.map(folder => ({
             ...folder,
             type: 'folder' as const,
-            folder_id: folder.parent_id,
+            folder_id: folder.parent_id || undefined,
           })),
           ...cachedData.contents.files.map(file => ({
             ...file,
@@ -102,7 +102,7 @@ export function useFolderData(folderId: string | null): FolderData {
         ...cachedData.contents.folders.map(folder => ({
           ...folder,
           type: 'folder' as const,
-          folder_id: folder.parent_id,
+          folder_id: folder.parent_id || undefined,
         })),
         ...cachedData.contents.files.map(file => ({
           ...file,
@@ -135,7 +135,7 @@ export function useFolderData(folderId: string | null): FolderData {
           ...cachedData.contents.folders.map(folder => ({
             ...folder,
             type: 'folder' as const,
-            folder_id: folder.parent_id,
+            folder_id: folder.parent_id || undefined,
           })),
           ...cachedData.contents.files.map(file => ({
             ...file,
@@ -165,7 +165,7 @@ export function useFolderData(folderId: string | null): FolderData {
           ...cachedData.contents.folders.map(folder => ({
             ...folder,
             type: 'folder' as const,
-            folder_id: folder.parent_id,
+            folder_id: folder.parent_id || undefined,
           })),
           ...cachedData.contents.files.map(file => ({
             ...file,
@@ -207,7 +207,7 @@ export function useFolderData(folderId: string | null): FolderData {
           name: folder.name,
           type: 'folder' as const,
           created_at: folder.created_at,
-          folder_id: folder.parent_id,
+          folder_id: folder.parent_id || undefined,
         })),
         ...result.contents.files.map(file => ({
           ...file,

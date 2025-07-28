@@ -23,7 +23,7 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange?: (selectedRows: TData[]) => void;
 }
 
-export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any, any>>(function DataTable<TData, TValue>({
+function DataTableComponent<TData, TValue>({
   columns,
   data,
   onRowSelectionChange,
@@ -109,4 +109,8 @@ export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any, any>
       </table>
     </div>
   );
-});
+}
+
+export const DataTable = React.forwardRef(DataTableComponent) as <TData, TValue>(
+  props: DataTableProps<TData, TValue> & { ref?: React.Ref<DataTableRef> }
+) => React.ReactElement;

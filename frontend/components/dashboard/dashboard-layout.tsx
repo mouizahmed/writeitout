@@ -20,7 +20,6 @@ import {
   X,
   Download,
   Move,
-  MoreHorizontal,
   ChevronDown,
   FileAudio,
   Home,
@@ -66,7 +65,6 @@ export function DashboardLayout({
   const [selectedItemsForDelete, setSelectedItemsForDelete] = useState<FileItem[]>([]);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [selectedItemsForMove, setSelectedItemsForMove] = useState<FileItem[]>([]);
-  const [singleFolderForMove, setSingleFolderForMove] = useState<FileItem | null>(null);
   const filesTableRef = useRef<FilesTableRef>(null);
 
   const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
@@ -105,9 +103,8 @@ export function DashboardLayout({
       name: folderName,
       type: 'folder',
       created_at: new Date().toISOString(),
-      folder_id: currentFolderId,
+      folder_id: currentFolderId || undefined,
     };
-    setSingleFolderForMove(folderItem);
     setSelectedItemsForMove([folderItem]);
     setIsMoveDialogOpen(true);
   }, [currentFolderId]);
@@ -151,7 +148,6 @@ export function DashboardLayout({
     filesTableRef.current?.clearSelection();
     setSelectedItemsForMove([]);
     setSelectedFiles([]);
-    setSingleFolderForMove(null);
   }, [moveFolder]);
 
   // Check if all selected items are folders (for Move button)

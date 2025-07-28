@@ -144,7 +144,6 @@ export function MoveFolderDialog({
     }
   };
 
-  const canMove = selectedDestinationId !== null || selectedDestinationId === null; // Can move to root
   const folderCount = folders.length;
 
   return (
