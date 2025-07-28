@@ -36,7 +36,8 @@ const getFileIcon = (type: string) => {
 const createColumns = (
   onFolderClick?: (folderId: string) => void,
   onFolderRename?: (folderId: string, currentName: string) => void,
-  onFolderDelete?: (folderId: string, folderName: string) => void
+  onFolderDelete?: (folderId: string, folderName: string) => void,
+  onFolderMove?: (folderId: string, folderName: string) => void
 ): ColumnDef<FileItem>[] => [
   {
     id: "select",
@@ -207,7 +208,11 @@ const createColumns = (
                 >
                   Rename
                 </DropdownMenuItem>
-                <DropdownMenuItem>Move</DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onFolderMove && onFolderMove(file.id, file.name)}
+                >
+                  Move
+                </DropdownMenuItem>
                 <DropdownMenuItem 
                   className="text-red-600"
                   onClick={() => onFolderDelete && onFolderDelete(file.id, file.name)}
@@ -237,6 +242,7 @@ interface FilesTableProps {
   onFolderClick?: (folderId: string) => void;
   onFolderRename?: (folderId: string, currentName: string) => void;
   onFolderDelete?: (folderId: string, folderName: string) => void;
+  onFolderMove?: (folderId: string, folderName: string) => void;
 }
 
 export interface FilesTableRef {
@@ -248,10 +254,11 @@ export const FilesTable = React.forwardRef<FilesTableRef, FilesTableProps>(funct
   onSelectionChange, 
   onFolderClick, 
   onFolderRename, 
-  onFolderDelete 
+  onFolderDelete,
+  onFolderMove 
 }, ref) {
   const dataTableRef = React.useRef<DataTableRef>(null);
-  const columns = createColumns(onFolderClick, onFolderRename, onFolderDelete);
+  const columns = createColumns(onFolderClick, onFolderRename, onFolderDelete, onFolderMove);
   
   React.useImperativeHandle(ref, () => ({
     clearSelection: () => dataTableRef.current?.clearSelection()

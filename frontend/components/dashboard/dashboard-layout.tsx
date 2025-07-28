@@ -66,6 +66,7 @@ export function DashboardLayout({
   const [selectedItemsForDelete, setSelectedItemsForDelete] = useState<FileItem[]>([]);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [selectedItemsForMove, setSelectedItemsForMove] = useState<FileItem[]>([]);
+  const [singleFolderForMove, setSingleFolderForMove] = useState<FileItem | null>(null);
   const filesTableRef = useRef<FilesTableRef>(null);
 
   const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
@@ -97,6 +98,19 @@ export function DashboardLayout({
     setSelectedFolderForDelete({ id: folderId, name: folderName });
     setIsDeleteFolderOpen(true);
   }, []);
+
+  const handleSingleFolderMove = useCallback((folderId: string, folderName: string) => {
+    const folderItem: FileItem = {
+      id: folderId,
+      name: folderName,
+      type: 'folder',
+      created_at: new Date().toISOString(),
+      folder_id: currentFolderId,
+    };
+    setSingleFolderForMove(folderItem);
+    setSelectedItemsForMove([folderItem]);
+    setIsMoveDialogOpen(true);
+  }, [currentFolderId]);
 
   const handleBulkDelete = useCallback(() => {
     if (selectedItemsForDelete.length > 0) {
@@ -137,6 +151,7 @@ export function DashboardLayout({
     filesTableRef.current?.clearSelection();
     setSelectedItemsForMove([]);
     setSelectedFiles([]);
+    setSingleFolderForMove(null);
   }, [moveFolder]);
 
   // Check if all selected items are folders (for Move button)
@@ -356,6 +371,7 @@ export function DashboardLayout({
                 onFolderClick={handleFolderClick}
                 onFolderRename={handleFolderRename}
                 onFolderDelete={handleFolderDelete}
+                onFolderMove={handleSingleFolderMove}
               />
             </div>
           </div>
