@@ -27,10 +27,12 @@ import {
   Trash
 } from "lucide-react";
 import { FilesTable, FilesTableRef, type FileItem } from "@/components/files-table";
+import type { Folder } from "@/types/folder";
 import { FolderDialog } from "@/components/dialog/create-folder-dialog";
 import { RenameFolderDialog } from "@/components/dialog/rename-folder-dialog";
 import { DeleteFolderDialog } from "@/components/dialog/delete-folder-dialog";
 import { BulkDeleteDialog } from "@/components/dialog/bulk-delete-dialog";
+import { MoveFolderDialog } from "@/components/dialog/move-folder-dialog";
 import { useFolderData } from "@/hooks/use-folder-data";
 import Link from "next/link";
 
@@ -51,7 +53,7 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
-  const { folder, breadcrumbs, files, loading, error, refetch, updateFolder, addFolder, deleteFolder } = useFolderData(currentFolderId ?? null);
+  const { folder, breadcrumbs, files, loading, error, refetch, updateFolder, addFolder, deleteFolder, moveFolder } = useFolderData(currentFolderId ?? null);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
@@ -62,16 +64,20 @@ export function DashboardLayout({
   const [selectedFolderForDelete, setSelectedFolderForDelete] = useState<{id: string, name: string} | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [selectedItemsForDelete, setSelectedItemsForDelete] = useState<FileItem[]>([]);
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const [selectedItemsForMove, setSelectedItemsForMove] = useState<FileItem[]>([]);
   const filesTableRef = useRef<FilesTableRef>(null);
 
   const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
     setSelectedFiles(selectedFiles.map(file => file.id));
     setSelectedItemsForDelete(selectedFiles);
+    setSelectedItemsForMove(selectedFiles);
   }, []);
 
   const handleClearSelection = useCallback(() => {
     filesTableRef.current?.clearSelection();
     setSelectedItemsForDelete([]);
+    setSelectedItemsForMove([]);
   }, []);
 
   const handleFolderClick = useCallback((folderId: string) => {
@@ -112,6 +118,30 @@ export function DashboardLayout({
     setSelectedItemsForDelete([]);
     setSelectedFiles([]);
   }, [selectedItemsForDelete, deleteFolder]);
+
+  const handleBulkMove = useCallback(() => {
+    // Only show move dialog if all selected items are folders
+    const folderItems = selectedItemsForMove.filter(item => item.type === 'folder');
+    if (folderItems.length > 0 && folderItems.length === selectedItemsForMove.length) {
+      setIsMoveDialogOpen(true);
+    }
+  }, [selectedItemsForMove]);
+
+  const handleMoveFoldersCompleted = useCallback((movedFolders: { folderId: string; oldParentId: string | null; newParentId: string | null; updatedFolder: Folder }[]) => {
+    // Update cache for moved folders
+    movedFolders.forEach(({ folderId, oldParentId, newParentId, updatedFolder }) => {
+      moveFolder(folderId, oldParentId, newParentId, updatedFolder);
+    });
+    
+    // Clear selection after successful move
+    filesTableRef.current?.clearSelection();
+    setSelectedItemsForMove([]);
+    setSelectedFiles([]);
+  }, [moveFolder]);
+
+  // Check if all selected items are folders (for Move button)
+  const allSelectedAreFolders = selectedItemsForMove.length > 0 && 
+    selectedItemsForMove.every(item => item.type === 'folder');
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -218,7 +248,12 @@ export function DashboardLayout({
                       <Download className="w-4 h-4 mr-1" />
                       Export
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleBulkMove}
+                      disabled={!allSelectedAreFolders}
+                    >
                       <Move className="w-4 h-4 mr-1" />
                       Move
                     </Button>
@@ -236,7 +271,12 @@ export function DashboardLayout({
                     <Button variant="outline" size="sm">
                       <Download className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleBulkMove}
+                      disabled={!allSelectedAreFolders}
+                    >
                       <Move className="w-4 h-4" />
                     </Button>
                     <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={handleBulkDelete}>
@@ -402,6 +442,14 @@ export function DashboardLayout({
         onOpenChange={setIsBulkDeleteOpen}
         selectedItems={selectedItemsForDelete}
         onItemsDeleted={handleBulkDeleteCompleted}
+      />
+
+      {/* Move Folder Dialog */}
+      <MoveFolderDialog 
+        open={isMoveDialogOpen}
+        onOpenChange={setIsMoveDialogOpen}
+        selectedFolders={selectedItemsForMove}
+        onFoldersMovedCompleted={handleMoveFoldersCompleted}
       />
     </div>
   );

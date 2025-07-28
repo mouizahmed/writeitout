@@ -321,3 +321,88 @@ func (h *FolderHandler) DeleteFolder(c *gin.Context) {
 		"message": "Folder deleted successfully",
 	})
 }
+
+type MoveFolderRequest struct {
+	ParentID *string `json:"parent_id"`
+}
+
+// MoveFolder handles moving a folder to a new parent location
+func (h *FolderHandler) MoveFolder(c *gin.Context) {
+	// Get user ID from authentication middleware
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Authentication required",
+			"message": "User authentication context not found. Please sign in again.",
+		})
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Server error",
+			"message": "Internal authentication error. Please try again or contact support.",
+		})
+		return
+	}
+
+	// Get folder ID from URL parameter
+	folderID := c.Param("id")
+	if folderID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request",
+			"message": "Folder ID is required.",
+		})
+		return
+	}
+
+	// Parse request body
+	var req MoveFolderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request data",
+			"message": "Request body is missing required fields or has invalid format.",
+		})
+		return
+	}
+
+	// Convert nil pointer to empty string for repository method
+	newParentID := ""
+	if req.ParentID != nil {
+		newParentID = *req.ParentID
+	}
+
+	// Move folder
+	folder, err := h.folderRepo.MoveFolder(folderID, newParentID, userIDStr)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   "Folder not found",
+				"message": "The specified folder does not exist or you don't have access to it.",
+			})
+			return
+		}
+		if strings.Contains(err.Error(), "circular") || strings.Contains(err.Error(), "descendants") {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Invalid move operation",
+				"message": "Cannot move folder into itself or its descendants.",
+			})
+			return
+		}
+		if strings.Contains(err.Error(), "destination folder") {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Invalid destination",
+				"message": "The destination folder does not exist or you don't have access to it.",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Database error",
+			"message": "Unable to move folder. Please try again later.",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, folder)
+}

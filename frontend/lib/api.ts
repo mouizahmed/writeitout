@@ -78,4 +78,11 @@ export const folderApi = {
     apiRequest<void>(`/folders/${folderId}`, token, {
       method: 'DELETE',
     }),
+
+  // Move a folder
+  moveFolder: (token: string, folderId: string, newParentId: string | null): Promise<Folder> =>
+    apiRequest<Folder>(`/folders/${folderId}/move`, token, {
+      method: 'PATCH',
+      body: JSON.stringify({ parent_id: newParentId }),
+    }),
 };

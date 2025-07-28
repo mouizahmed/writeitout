@@ -12,6 +12,7 @@ let folderTreeUpdateListeners: (() => void)[] = [];
 
 export function useFolderData(folderId: string | null): FolderData {
   const { getToken } = useAuth();
+  
   const [data, setData] = useState<FolderData>({
     folder: null,
     breadcrumbs: [{ id: null, name: "Dashboard", href: "/dashboard" }],
@@ -22,6 +23,7 @@ export function useFolderData(folderId: string | null): FolderData {
     updateFolder: () => {},
     addFolder: () => {},
     deleteFolder: () => {},
+    moveFolder: () => {},
   });
 
   const updateFolder = useCallback((updatedFolder: Folder) => {
@@ -37,6 +39,7 @@ export function useFolderData(folderId: string | null): FolderData {
         ...cachedData.contents.folders.map(folder => ({
           ...folder,
           type: 'folder' as const,
+          folder_id: folder.parent_id,
         })),
         ...cachedData.contents.files.map(file => ({
           ...file,
@@ -71,6 +74,7 @@ export function useFolderData(folderId: string | null): FolderData {
           ...cachedData.contents.folders.map(folder => ({
             ...folder,
             type: 'folder' as const,
+            folder_id: folder.parent_id,
           })),
           ...cachedData.contents.files.map(file => ({
             ...file,
@@ -98,6 +102,7 @@ export function useFolderData(folderId: string | null): FolderData {
         ...cachedData.contents.folders.map(folder => ({
           ...folder,
           type: 'folder' as const,
+          folder_id: folder.parent_id,
         })),
         ...cachedData.contents.files.map(file => ({
           ...file,
@@ -108,6 +113,42 @@ export function useFolderData(folderId: string | null): FolderData {
         ...prev,
         files: combinedFiles,
       }));
+    }
+  }, [folderId]);
+
+  const moveFolder = useCallback((movedFolderId: string, oldParentId: string | null, newParentId: string | null, updatedFolder: Folder) => {
+    // Update cache first
+    moveFolderInCache(movedFolderId, oldParentId, newParentId, updatedFolder);
+    
+    // Refresh data from cache to trigger re-render (for both old and new parent views)
+    const shouldUpdateCurrentView = (
+      (!folderId && (oldParentId === null || newParentId === null)) || // Root view affected
+      (folderId && (oldParentId === folderId || newParentId === folderId)) // Current folder is old or new parent
+    );
+
+    if (shouldUpdateCurrentView) {
+      const cacheKey = folderId || 'root';
+      const cachedData = folderDataCache.get(cacheKey);
+      
+      if (cachedData) {
+        const combinedFiles = [
+          ...cachedData.contents.folders.map(folder => ({
+            ...folder,
+            type: 'folder' as const,
+            folder_id: folder.parent_id,
+          })),
+          ...cachedData.contents.files.map(file => ({
+            ...file,
+          }))
+        ];
+
+        setData(prev => ({
+          ...prev,
+          folder: cachedData.folder,
+          breadcrumbs: cachedData.breadcrumbs,
+          files: combinedFiles,
+        }));
+      }
     }
   }, [folderId]);
 
@@ -124,6 +165,7 @@ export function useFolderData(folderId: string | null): FolderData {
           ...cachedData.contents.folders.map(folder => ({
             ...folder,
             type: 'folder' as const,
+            folder_id: folder.parent_id,
           })),
           ...cachedData.contents.files.map(file => ({
             ...file,
@@ -140,6 +182,7 @@ export function useFolderData(folderId: string | null): FolderData {
           updateFolder,
           addFolder,
           deleteFolder,
+          moveFolder,
         });
         return;
       }
@@ -164,6 +207,7 @@ export function useFolderData(folderId: string | null): FolderData {
           name: folder.name,
           type: 'folder' as const,
           created_at: folder.created_at,
+          folder_id: folder.parent_id,
         })),
         ...result.contents.files.map(file => ({
           ...file,
@@ -180,6 +224,7 @@ export function useFolderData(folderId: string | null): FolderData {
         updateFolder,
         addFolder,
         deleteFolder,
+        moveFolder,
       });
     } catch (err) {
       console.error('Failed to fetch folder data:', err);
@@ -189,7 +234,7 @@ export function useFolderData(folderId: string | null): FolderData {
         error: err instanceof Error ? err.message : 'Failed to load folder data'
       }));
     }
-  }, [folderId, getToken, updateFolder, addFolder, deleteFolder]);
+  }, [folderId, getToken, updateFolder, addFolder, deleteFolder, moveFolder]);
 
   // Refetch data when folderId changes
   useEffect(() => {
@@ -302,6 +347,53 @@ export function removeFolderFromCache(folderId: string, parentFolderId: string |
   
   // Update folder tree cache
   removeFolderFromTreeCache(folderId);
+}
+
+// Helper function to move a folder in existing cache
+export function moveFolderInCache(folderId: string, oldParentId: string | null, newParentId: string | null, updatedFolder: Folder) {
+  // First remove the folder from its old location
+  const oldParentCacheKey = oldParentId || 'root';
+  const oldParentData = folderDataCache.get(oldParentCacheKey);
+  
+  if (oldParentData) {
+    const updatedOldParentData = {
+      ...oldParentData,
+      contents: {
+        ...oldParentData.contents,
+        folders: oldParentData.contents.folders.filter(f => f.id !== folderId)
+      },
+      stats: {
+        ...oldParentData.stats,
+        total_folders: oldParentData.stats.total_folders - 1
+      }
+    };
+    folderDataCache.set(oldParentCacheKey, updatedOldParentData);
+  }
+  
+  // Then add the folder to its new location
+  const newParentCacheKey = newParentId || 'root';
+  const newParentData = folderDataCache.get(newParentCacheKey);
+  
+  if (newParentData) {
+    const updatedNewParentData = {
+      ...newParentData,
+      contents: {
+        ...newParentData.contents,
+        folders: [...newParentData.contents.folders, updatedFolder].sort((a, b) => a.name.localeCompare(b.name))
+      },
+      stats: {
+        ...newParentData.stats,
+        total_folders: newParentData.stats.total_folders + 1
+      }
+    };
+    folderDataCache.set(newParentCacheKey, updatedNewParentData);
+  }
+  
+  // Update the folder in any other cache entries (like breadcrumbs)
+  updateFolderInCache(updatedFolder);
+  
+  // Update folder tree cache
+  updateFolderInTreeCache(updatedFolder);
 }
 
 

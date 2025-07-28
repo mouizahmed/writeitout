@@ -54,4 +54,5 @@ export interface FolderData {
   updateFolder: (updatedFolder: Folder) => void;
   addFolder: (newFolder: Folder) => void;
   deleteFolder: (folderId: string) => void;
+  moveFolder: (folderId: string, oldParentId: string | null, newParentId: string | null, updatedFolder: Folder) => void;
 }

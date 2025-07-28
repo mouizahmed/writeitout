@@ -356,3 +356,102 @@ func (r *FolderRepository) DeleteFolder(folderID, userID string) error {
 	
 	return nil
 }
+
+// MoveFolder moves a folder to a new parent location
+func (r *FolderRepository) MoveFolder(folderID, newParentID, userID string) (*models.Folder, error) {
+	// First check if the folder exists and belongs to the user
+	existingFolder, err := r.GetFolderByID(folderID, userID)
+	if err != nil {
+		return nil, err
+	}
+	if existingFolder == nil {
+		return nil, fmt.Errorf("folder not found")
+	}
+
+	// If newParentID is provided, validate it exists and belongs to the user
+	if newParentID != "" {
+		parentFolder, err := r.GetFolderByID(newParentID, userID)
+		if err != nil {
+			return nil, err
+		}
+		if parentFolder == nil {
+			return nil, fmt.Errorf("destination folder not found")
+		}
+
+		// Prevent circular reference - check if newParentID is a descendant of folderID
+		if err := r.validateNoCircularReference(folderID, newParentID, userID); err != nil {
+			return nil, err
+		}
+	}
+
+	// Convert empty string to nil for database
+	var parentID *string
+	if newParentID != "" {
+		parentID = &newParentID
+	}
+
+	query := `
+		UPDATE folders 
+		SET parent_id = $1, updated_at = NOW()
+		WHERE id = $2 AND user_id = $3 AND deleted_at IS NULL
+		RETURNING id, name, parent_id, user_id, created_at, updated_at
+	`
+	
+	var folder models.Folder
+	err = r.db.QueryRow(query, parentID, folderID, userID).Scan(
+		&folder.ID,
+		&folder.Name,
+		&folder.ParentID,
+		&folder.UserID,
+		&folder.CreatedAt,
+		&folder.UpdatedAt,
+	)
+	
+	if err != nil {
+		if strings.Contains(err.Error(), "foreign key") {
+			return nil, fmt.Errorf("invalid destination folder: the specified parent folder does not exist")
+		}
+		if strings.Contains(err.Error(), "connection") {
+			return nil, fmt.Errorf("database connection error: unable to connect to database")
+		}
+		return nil, fmt.Errorf("database error: failed to move folder")
+	}
+	
+	return &folder, nil
+}
+
+// validateNoCircularReference ensures a folder is not moved into itself or its descendants
+func (r *FolderRepository) validateNoCircularReference(folderID, newParentID, userID string) error {
+	// Use recursive CTE to find all descendants of the folder being moved
+	query := `
+		WITH RECURSIVE descendants AS (
+			-- Base case: start with the folder being moved
+			SELECT id, parent_id
+			FROM folders
+			WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+			
+			UNION ALL
+			
+			-- Recursive case: get all child folders
+			SELECT f.id, f.parent_id
+			FROM folders f
+			INNER JOIN descendants d ON f.parent_id = d.id
+			WHERE f.user_id = $2 AND f.deleted_at IS NULL
+		)
+		SELECT COUNT(*)
+		FROM descendants
+		WHERE id = $3
+	`
+	
+	var count int
+	err := r.db.QueryRow(query, folderID, userID, newParentID).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("failed to validate move operation: %w", err)
+	}
+	
+	if count > 0 {
+		return fmt.Errorf("cannot move folder into itself or its descendants")
+	}
+	
+	return nil
+}
