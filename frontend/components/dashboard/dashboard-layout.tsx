@@ -23,12 +23,14 @@ import {
   MoreHorizontal,
   ChevronDown,
   FileAudio,
-  Home
+  Home,
+  Trash
 } from "lucide-react";
 import { FilesTable, FilesTableRef, type FileItem } from "@/components/files-table";
 import { FolderDialog } from "@/components/dialog/create-folder-dialog";
 import { RenameFolderDialog } from "@/components/dialog/rename-folder-dialog";
 import { DeleteFolderDialog } from "@/components/dialog/delete-folder-dialog";
+import { BulkDeleteDialog } from "@/components/dialog/bulk-delete-dialog";
 import { useFolderData } from "@/hooks/use-folder-data";
 import Link from "next/link";
 
@@ -58,14 +60,18 @@ export function DashboardLayout({
   const [selectedFolderForRename, setSelectedFolderForRename] = useState<{id: string, name: string} | null>(null);
   const [isDeleteFolderOpen, setIsDeleteFolderOpen] = useState(false);
   const [selectedFolderForDelete, setSelectedFolderForDelete] = useState<{id: string, name: string} | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [selectedItemsForDelete, setSelectedItemsForDelete] = useState<FileItem[]>([]);
   const filesTableRef = useRef<FilesTableRef>(null);
 
   const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
     setSelectedFiles(selectedFiles.map(file => file.id));
+    setSelectedItemsForDelete(selectedFiles);
   }, []);
 
   const handleClearSelection = useCallback(() => {
     filesTableRef.current?.clearSelection();
+    setSelectedItemsForDelete([]);
   }, []);
 
   const handleFolderClick = useCallback((folderId: string) => {
@@ -85,6 +91,27 @@ export function DashboardLayout({
     setSelectedFolderForDelete({ id: folderId, name: folderName });
     setIsDeleteFolderOpen(true);
   }, []);
+
+  const handleBulkDelete = useCallback(() => {
+    if (selectedItemsForDelete.length > 0) {
+      setIsBulkDeleteOpen(true);
+    }
+  }, [selectedItemsForDelete]);
+
+  const handleBulkDeleteCompleted = useCallback((deletedItemIds: string[]) => {
+    // Remove deleted items from cache and update UI
+    deletedItemIds.forEach(itemId => {
+      const deletedItem = selectedItemsForDelete.find(item => item.id === itemId);
+      if (deletedItem && deletedItem.type === 'folder') {
+        deleteFolder(itemId);
+      }
+    });
+    
+    // Clear selection after successful deletion
+    filesTableRef.current?.clearSelection();
+    setSelectedItemsForDelete([]);
+    setSelectedFiles([]);
+  }, [selectedItemsForDelete, deleteFolder]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -195,8 +222,9 @@ export function DashboardLayout({
                       <Move className="w-4 h-4 mr-1" />
                       Move
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <MoreHorizontal className="w-4 h-4" />
+                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={handleBulkDelete}>
+                      <Trash className="w-4 h-4 mr-1" />
+                      Delete
                     </Button>
                   </div>
                   
@@ -211,8 +239,8 @@ export function DashboardLayout({
                     <Button variant="outline" size="sm">
                       <Move className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <MoreHorizontal className="w-4 h-4" />
+                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={handleBulkDelete}>
+                      <Trash className="w-4 h-4" />
                     </Button>
                   </div>
                 </>
@@ -367,6 +395,14 @@ export function DashboardLayout({
           onFolderDeleted={deleteFolder}
         />
       )}
+
+      {/* Bulk Delete Dialog */}
+      <BulkDeleteDialog 
+        open={isBulkDeleteOpen}
+        onOpenChange={setIsBulkDeleteOpen}
+        selectedItems={selectedItemsForDelete}
+        onItemsDeleted={handleBulkDeleteCompleted}
+      />
     </div>
   );
 }
