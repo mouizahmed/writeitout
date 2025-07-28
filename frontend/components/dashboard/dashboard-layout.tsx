@@ -58,9 +58,18 @@ export function DashboardLayout({
   const [selectedFolderForRename, setSelectedFolderForRename] = useState<{id: string, name: string} | null>(null);
   const [isDeleteFolderOpen, setIsDeleteFolderOpen] = useState(false);
   const [selectedFolderForDelete, setSelectedFolderForDelete] = useState<{id: string, name: string} | null>(null);
+  const [clearSelection, setClearSelection] = useState(false);
 
   const handleFileSelection = useCallback((selectedFiles: FileItem[]) => {
     setSelectedFiles(selectedFiles.map(file => file.id));
+    setClearSelection(false); // Reset clear flag when selection changes
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedFiles([]);
+    setClearSelection(true);
+    // Reset the flag after a brief moment to allow the effect to trigger
+    setTimeout(() => setClearSelection(false), 100);
   }, []);
 
   const handleFolderClick = useCallback((folderId: string) => {
@@ -178,7 +187,7 @@ export function DashboardLayout({
                 <>
                   {/* Selection actions - Desktop */}
                   <div className="hidden sm:flex items-center space-x-2 shrink-0">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={handleClearSelection}>
                       <X className="w-4 h-4 mr-1" />
                       All selected
                     </Button>
@@ -197,7 +206,7 @@ export function DashboardLayout({
                   
                   {/* Selection actions - Mobile */}
                   <div className="flex sm:hidden items-center space-x-1 shrink-0">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={handleClearSelection}>
                       <X className="w-4 h-4" />
                     </Button>
                     <Button variant="outline" size="sm">
@@ -282,6 +291,7 @@ export function DashboardLayout({
                 onFolderClick={handleFolderClick}
                 onFolderRename={handleFolderRename}
                 onFolderDelete={handleFolderDelete}
+                clearSelection={clearSelection}
               />
             </div>
           </div>

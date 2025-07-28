@@ -237,9 +237,10 @@ interface FilesTableProps {
   onFolderClick?: (folderId: string) => void;
   onFolderRename?: (folderId: string, currentName: string) => void;
   onFolderDelete?: (folderId: string, folderName: string) => void;
+  clearSelection?: boolean;
 }
 
-export function FilesTable({ data, onSelectionChange, onFolderClick, onFolderRename, onFolderDelete }: FilesTableProps) {
+export function FilesTable({ data, onSelectionChange, onFolderClick, onFolderRename, onFolderDelete, clearSelection }: FilesTableProps) {
   const columns = createColumns(onFolderClick, onFolderRename, onFolderDelete);
   
   return (
@@ -248,6 +249,7 @@ export function FilesTable({ data, onSelectionChange, onFolderClick, onFolderRen
         columns={columns} 
         data={data} 
         onRowSelectionChange={onSelectionChange}
+        clearSelection={clearSelection}
       />
     </div>
   );

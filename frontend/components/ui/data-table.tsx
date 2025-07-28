@@ -18,12 +18,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onRowSelectionChange?: (selectedRows: TData[]) => void;
+  clearSelection?: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   onRowSelectionChange,
+  clearSelection,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -54,6 +56,12 @@ export function DataTable<TData, TValue>({
       onRowSelectionChange(selectedRows);
     }
   }, [rowSelection, onRowSelectionChange, table]);
+
+  React.useEffect(() => {
+    if (clearSelection) {
+      setRowSelection({});
+    }
+  }, [clearSelection]);
 
   return (
     <div className="w-full">
