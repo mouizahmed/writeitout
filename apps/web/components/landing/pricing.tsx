@@ -62,7 +62,7 @@ export default function Pricing() {
   ];
 
   return (
-    <section id="pricing" className="px-6 py-12 bg-gradient-to-b from-amber-50/30 via-yellow-50/20 to-amber-50/25">
+    <section id="pricing" className="px-6 py-12 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -79,8 +79,8 @@ export default function Pricing() {
             </span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 ${
-                isAnnual ? 'bg-amber-600' : 'bg-gray-200'
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 ${
+                isAnnual ? 'bg-black' : 'bg-gray-200'
               }`}
             >
               <span
@@ -92,7 +92,7 @@ export default function Pricing() {
             <span className={`ml-3 ${isAnnual ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
               Annual
             </span>
-            <Badge className="ml-2 bg-amber-100 text-amber-800 hover:bg-amber-100">
+            <Badge className="ml-2 bg-gray-100 text-gray-800 hover:bg-gray-100">
               Save 20%
             </Badge>
           </div>
@@ -100,9 +100,9 @@ export default function Pricing() {
 
         <div className="grid md:grid-cols-3 gap-8">
           {plans.map((plan, index) => (
-            <Card key={index} className={`relative hover:shadow-lg transition-shadow bg-white/95 backdrop-blur-sm border-white/50 flex flex-col ${plan.popular ? 'ring-2 ring-amber-500' : ''}`}>
+            <Card key={index} className={`relative hover:shadow-lg transition-shadow bg-white border-gray-200 flex flex-col ${plan.popular ? 'ring-2 ring-black' : ''}`}>
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-500 text-white">
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-black text-white">
                   Most Popular
                 </Badge>
               )}

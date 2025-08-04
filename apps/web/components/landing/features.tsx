@@ -1,83 +1,153 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Globe, Captions, Mic, ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, Clock, Shield, Search, Users, Zap } from "lucide-react";
 
 export default function Features() {
   return (
-    <section id="features" className="px-6 py-12 bg-gradient-to-b from-amber-50/40 via-yellow-50/20 to-amber-50/30">
+    <section id="features" className="px-6 py-16 bg-gray-50">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-          Everything you need for audio processing
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-4">
+          The complete platform for 
+          <br />
+          AI-powered transcription
         </h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          <Card className="hover:shadow-lg transition-shadow bg-white/90 backdrop-blur-sm border-white/50">
-            <CardHeader>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                <Mic className="w-6 h-6 text-green-500" />
-              </div>
-              <CardTitle>Transcription</CardTitle>
-              <CardDescription>
-                Convert speech to text with speaker identification and timestamps
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-green-600 font-medium">Speaker 1</span>
-                  <span className="text-gray-400">00:24</span>
-                </div>
-                <p className="text-gray-700">Hey David, you better back up, we don&apos;t have enough tools to get up to BB.</p>
-              </div>
-            </CardContent>
-          </Card>
+        <p className="text-center text-gray-600 mb-16 max-w-3xl mx-auto">
+          WriteItOut is designed for building accurate transcripts that solve your 
+          team's communication needs while improving productivity and collaboration.
+        </p>
 
-          <Card className="hover:shadow-lg transition-shadow bg-white/90 backdrop-blur-sm border-white/50">
-            <CardHeader>
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                <Captions className="w-6 h-6 text-red-500" />
-              </div>
-              <CardTitle>Subtitles</CardTitle>
-              <CardDescription>
-                Generate perfect subtitles with timing and styling options
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-black rounded-lg p-4 relative">
-                <div className="absolute bottom-4 left-4 right-4 text-center">
-                  <div className="bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
-                    I am Groot
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Card 1: AI-Powered Accuracy */}
+          <Card className="hover:shadow-xl transition-all duration-300 bg-white border-gray-200 overflow-hidden">
+            <CardContent className="p-8">
+              {/* Visual mockup area */}
+              <div className="mb-8 h-48 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                <div className="absolute top-4 left-4 flex gap-2">
+                  <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                    <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                  </div>
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                    <Search className="w-4 h-4 text-gray-400" />
+                  </div>
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                    <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
                   </div>
                 </div>
-                <div className="h-20 bg-gray-800 rounded"></div>
+                
+                <div className="absolute bottom-4 right-4">
+                  <Button className="bg-black text-white rounded-full px-4 py-2 text-sm">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Ask AI
+                  </Button>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-4 h-4 bg-green-500 rounded-full mx-auto mb-2"></div>
+                  <div className="text-xs text-gray-500">AI-powered insights</div>
+                </div>
               </div>
+
+              <CardTitle className="text-xl mb-3">AI-powered for accuracy</CardTitle>
+              <CardDescription className="text-gray-600 leading-relaxed">
+                Advanced AI models with reasoning capabilities 
+                for highly accurate transcripts and intelligent responses to complex queries.
+              </CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow bg-white/90 backdrop-blur-sm border-white/50">
-            <CardHeader>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <Globe className="w-6 h-6 text-purple-500" />
+          {/* Card 2: Real-time Collaboration */}
+          <Card className="hover:shadow-xl transition-all duration-300 bg-white border-gray-200 overflow-hidden">
+            <CardContent className="p-8">
+              {/* Visual mockup area */}
+              <div className="mb-8 h-48 bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                <div className="absolute top-4 left-4">
+                  <div className="flex items-center gap-2 bg-white rounded-full px-3 py-2 shadow-sm">
+                    <div className="flex -space-x-2">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full border-2 border-white"></div>
+                      <div className="w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
+                      <div className="w-6 h-6 bg-purple-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <span className="text-xs text-gray-600">3 active</span>
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="bg-white rounded-lg p-3 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="text-xs text-gray-500">Live collaboration</div>
+                    </div>
+                    <div className="flex gap-1">
+                      <div className="h-2 bg-gray-200 rounded flex-1"></div>
+                      <div className="h-2 bg-gray-200 rounded flex-1"></div>
+                      <div className="h-2 bg-gray-200 rounded flex-1"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                  <div className="text-xs text-gray-500">Real-time sync</div>
+                </div>
               </div>
-              <CardTitle>Translation</CardTitle>
-              <CardDescription>
-                Translate your content into 100+ languages instantly
+
+              <CardTitle className="text-xl mb-3">Designed for collaboration</CardTitle>
+              <CardDescription className="text-gray-600 leading-relaxed">
+                Create, manage, and share transcripts easily with your team, 
+                even without technical skills. Perfect for meetings and interviews.
               </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-center gap-2">
-                  <Badge variant="outline" className="text-xs">English</Badge>
-                  <span className="text-sm text-gray-600">I am Groot</span>
+            </CardContent>
+          </Card>
+
+          {/* Card 3: Enterprise Security */}
+          <Card className="hover:shadow-xl transition-all duration-300 bg-white border-gray-200 overflow-hidden">
+            <CardContent className="p-8">
+              {/* Visual mockup area */}
+              <div className="mb-8 h-48 bg-gradient-to-br from-purple-50 to-violet-100 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                <div className="absolute top-4 left-4">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                    <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-center">
-                  <ArrowUpDown className="w-4 h-4 text-gray-400" />
+                
+                <div className="absolute top-4 right-4">
+                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Badge variant="outline" className="text-xs">Spanish</Badge>
-                  <span className="text-sm text-gray-600">Yo soy Groot</span>
+                
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="flex justify-center gap-2">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                  </div>
+                  <div className="text-center mt-2">
+                    <div className="text-xs text-gray-500">Enterprise security</div>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-black rounded-3xl flex items-center justify-center mx-auto mb-2">
+                    <Shield className="w-8 h-8 text-white" />
+                  </div>
                 </div>
               </div>
+
+              <CardTitle className="text-xl mb-3">Engineered for security</CardTitle>
+              <CardDescription className="text-gray-600 leading-relaxed">
+                Enjoy peace of mind with robust encryption 
+                and strict compliance standards. Your sensitive data stays protected.
+              </CardDescription>
             </CardContent>
           </Card>
         </div>

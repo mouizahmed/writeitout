@@ -22,7 +22,7 @@ export default function Navbar() {
                 height={50}
                 className="w-12 h-12 border border-gray-200 rounded-xl"
               />
-              <span className="text-2xl font-bold text-gray-900 tracking-tight font-serif hidden md:flex">WriteItOut</span>
+              {/* <span className="text-2xl font-bold text-gray-900 tracking-tight font-serif hidden md:flex">WriteItOut</span> */}
             </Link>
 
             {/* Desktop Navigation - Hidden on mobile */}
@@ -54,7 +54,7 @@ export default function Navbar() {
                 /* Show dashboard button for logged-in users */
                 <Link href="/dashboard">
                   <Button 
-                    className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-3 sm:px-6 py-2 rounded-lg transition-colors shadow-md text-sm"
+                    className="bg-black hover:bg-gray-800 text-white font-semibold px-3 sm:px-6 py-2 rounded-lg transition-colors text-sm"
                   >
                     Dashboard
                   </Button>
@@ -69,7 +69,7 @@ export default function Navbar() {
                   {/* Try for free button - Show only when not signed in */}
                   <Link href="/signup">
                     <Button 
-                      className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-3 sm:px-6 py-2 rounded-lg transition-colors shadow-md text-sm"
+                      className="bg-black hover:bg-gray-800 text-white font-semibold px-3 sm:px-6 py-2 rounded-lg transition-colors text-sm"
                     >
                       Try for free
                     </Button>
